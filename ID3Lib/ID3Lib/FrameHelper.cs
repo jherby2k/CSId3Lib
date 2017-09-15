@@ -1,11 +1,10 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.IO;
 using ICSharpCode.SharpZipLib.Zip.Compression;
 using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Id3Lib.Exceptions;
 using Id3Lib.Frames;
-using System.Diagnostics.CodeAnalysis;
+using System;
+using System.IO;
 
 namespace Id3Lib
 {
@@ -73,12 +72,12 @@ namespace Id3Lib
             uint size = (uint)buffer.Length;
             Stream stream = new MemoryStream(buffer, false);
             var reader = new BinaryReader(stream);
-            if (GetGrouping(flags) == true)
+            if (GetGrouping(flags))
             {
                 frame.Group = reader.ReadByte();
                 index++;
             }
-            if (frame.Compression == true)
+            if (frame.Compression)
             {
                 switch (Version)
                 {
@@ -100,11 +99,11 @@ namespace Id3Lib
                 index = 0;
                 stream = new InflaterInputStream(stream);
             }
-            if (frame.Encryption == true)
+            if (frame.Encryption)
             {
                 throw new NotImplementedException("Encryption is not implemented, consequently it is not supported.");
             }
-            if (frame.Unsynchronisation == true)
+            if (frame.Unsynchronisation)
             {
                 var memoryStream = new MemoryStream();
                 size = Sync.Unsafe(stream, memoryStream, size);
@@ -131,10 +130,10 @@ namespace Id3Lib
             var memoryStream = new MemoryStream();
             var writer = new BinaryWriter(memoryStream);
 
-            if (frame.Group.HasValue == true)
+            if (frame.Group.HasValue)
                 writer.Write((byte)frame.Group);
 
-            if (frame.Compression == true)
+            if (frame.Compression)
             {
                 switch (Version)
                 {
@@ -178,13 +177,13 @@ namespace Id3Lib
                 memoryStream.Write(buffer, 0, buffer.Length);
             }
 
-            if (frame.Encryption == true)
+            if (frame.Encryption)
             {
                 //TODO: Encryption
                 throw new NotImplementedException("Encryption is not implemented, consequently it is not supported.");
             }
 
-            if (frame.Unsynchronisation == true)
+            if (frame.Unsynchronisation)
             {
                 MemoryStream synchStream = new MemoryStream();
                 Sync.Unsafe(memoryStream, synchStream, (uint)memoryStream.Position);
@@ -276,7 +275,7 @@ namespace Id3Lib
                 case 3:
                     return (flags & 0x0040) > 0;
                 case 4:
-                    return (flags & 0x0004) > 0; ;
+                    return (flags & 0x0004) > 0;
                 default:
                     throw new InvalidOperationException("ID3v2 Version " + _version + " is not supported.");
             }
@@ -289,7 +288,7 @@ namespace Id3Lib
                 case 3:
                     return false;
                 case 4:
-                    return (flags & 0x0002) > 0; ;
+                    return (flags & 0x0002) > 0;
                 default:
                     throw new InvalidOperationException("ID3v2 Version " + _version + " is not supported.");
             }

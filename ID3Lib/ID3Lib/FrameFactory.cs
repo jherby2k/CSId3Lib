@@ -1,11 +1,10 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Diagnostics.CodeAnalysis;
 using Id3Lib.Exceptions;
 using Id3Lib.Frames;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Id3Lib
 {
@@ -52,7 +51,7 @@ namespace Id3Lib
                 throw new InvalidTagException("Invalid frame type: '" + frameId + "', it must be 4 characters long.");
 
             //Try to find the most specific frame first
-            Type type = null;
+            Type type;
             if (_frames.TryGetValue(frameId, out type))
                 return (FrameBase)Activator.CreateInstance(type, frameId);
             //Get the T*** or U*** frame, they are all identical except for the user defined frames 'TXXX' and 'WXXX'.

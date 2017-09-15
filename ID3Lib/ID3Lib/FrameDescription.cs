@@ -1,7 +1,5 @@
 ﻿// Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Id3Lib
 {

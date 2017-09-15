@@ -1,12 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.IO;
-using System.Text;
-using System.Diagnostics;
-using System.Drawing;
-using System.Diagnostics.CodeAnalysis;
 using Id3Lib.Frames;
 using SixLabors.ImageSharp;
+using System;
 
 namespace Id3Lib
 {
@@ -16,7 +11,7 @@ namespace Id3Lib
     public class TagHandler
     {
         #region Fields
-        private TagModel _frameModel = null;
+        private TagModel _frameModel;
         private TextCode _textCode = TextCode.Ascii; // Default text code
         private string _language = "eng"; // Default language
         #endregion
@@ -286,7 +281,7 @@ namespace Id3Lib
                 if (!String.IsNullOrEmpty(message))
                 {
                     FrameFullText frameLCText = (FrameFullText)FrameFactory.Build(frameId);
-                    frameLCText.TextCode = this._textCode;
+                    frameLCText.TextCode = _textCode;
                     frameLCText.Language = "eng";
                     frameLCText.Description = string.Empty;
                     frameLCText.Text = message;

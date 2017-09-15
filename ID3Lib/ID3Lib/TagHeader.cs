@@ -1,9 +1,8 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.IO;
+using Id3Lib.Exceptions;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using Id3Lib.Exceptions;
+using System.IO;
 
 namespace Id3Lib
 {
@@ -87,7 +86,7 @@ namespace Id3Lib
             get { return (_id3Flags & 0x80) > 0; }
             set
             {
-                if (value == true)
+                if (value)
                 {
                     _id3Flags |= 0x80;
                 }
@@ -105,7 +104,7 @@ namespace Id3Lib
             get { return (_id3Flags & 0x40) > 0; }
             set
             {
-                if (value == true)
+                if (value)
                 {
                     _id3Flags |= 0x40;
                 }
@@ -126,7 +125,7 @@ namespace Id3Lib
             get { return (_id3Flags & 0x20) > 0; }
             set
             {
-                if (value == true)
+                if (value)
                 {
                     _id3Flags |= 0x20;
                 }
@@ -150,7 +149,7 @@ namespace Id3Lib
             }
             set
             {
-                if (value == true)
+                if (value)
                 {
                     _id3Flags |= 0x10;
                     _paddingSize = 0;

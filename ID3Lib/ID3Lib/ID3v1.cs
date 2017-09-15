@@ -1,12 +1,11 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.IO;
-using System.Text;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using Id3Lib.Exceptions;
 using Id3Lib.Frames;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Text;
 
 namespace Id3Lib
 {
@@ -368,7 +367,7 @@ namespace Id3Lib
             reader.Read(idTag, 0, 3);
 
             // Is there a ID3v1 tag already?
-            if (Memory.Compare(_id3, idTag) == true)
+            if (Memory.Compare(_id3, idTag))
             {
                 //Found a ID3 tag so we will over write the old tag
                 // (and the 'TAG' label too, so WriteAtStreamPosition is clean)
@@ -462,8 +461,8 @@ namespace Id3Lib
             writer.Write(tag, 0, 28);
             Memory.Clear(tag, 0, 30);
             writer.Write((byte)0);
-            writer.Write((byte)_track);
-            writer.Write((byte)_genre);
+            writer.Write(_track);
+            writer.Write(_genre);
         }
         #endregion
     }

@@ -1,11 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Collections;
-using System.Text;
 using Id3Lib.Exceptions;
 using Id3Lib.Frames;
+using System;
+using System.IO;
+using System.Text;
 
 namespace Id3Lib
 {
@@ -34,7 +32,7 @@ namespace Id3Lib
 
             uint id3TagSize = frameModel.Header.TagSize;
 
-            if (frameModel.Header.Unsync == true)
+            if (frameModel.Header.Unsync)
             {
                 var memory = new MemoryStream();
                 id3TagSize -= Sync.Unsafe(stream, memory, id3TagSize);
@@ -44,7 +42,7 @@ namespace Id3Lib
             }
             uint rawSize;
             // load the extended header
-            if (frameModel.Header.ExtendedHeader == true)
+            if (frameModel.Header.ExtendedHeader)
             {
                 frameModel.ExtendedHeader.Deserialize(stream);
                 rawSize = id3TagSize - frameModel.ExtendedHeader.Size;
@@ -145,7 +143,7 @@ namespace Id3Lib
                 byte[] frameData = new byte[frameSize];
                 reader.Read(frameData, 0, (int)frameSize);
                 index += frameSize; // read more bytes
-                frameModel.Add(frameHelper.Build(UTF8Encoding.UTF8.GetString(frameId, 0, 4), flags, frameData));
+                frameModel.Add(frameHelper.Build(Encoding.UTF8.GetString(frameId, 0, 4), flags, frameData));
             }
             return frameModel;
         }
@@ -169,7 +167,7 @@ namespace Id3Lib
             {
                 //TODO: Do validations on tag name correctness
                 byte[] frameId = new byte[4];
-                UTF8Encoding.UTF8.GetBytes(frame.FrameId, 0, 4, frameId, 0);
+                Encoding.UTF8.GetBytes(frame.FrameId, 0, 4, frameId, 0);
                 writer.Write(frameId); // Write the 4 byte text tag
                 ushort flags;
                 byte[] buffer = frameHelper.Make(frame, out flags);
@@ -190,7 +188,7 @@ namespace Id3Lib
             stream.Seek(10, SeekOrigin.Begin);
 
             // TODO: Add extended header handling
-            if (frameModel.Header.Unsync == true)
+            if (frameModel.Header.Unsync)
                 id3TagSize += Sync.Safe(memory, stream, id3TagSize);
             else
                 memory.WriteTo(stream);
