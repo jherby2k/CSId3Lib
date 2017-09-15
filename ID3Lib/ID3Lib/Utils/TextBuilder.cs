@@ -102,7 +102,7 @@ namespace Id3Lib
 
             if (count > 0)
             {
-                var encoding = Encoding.GetEncoding(1252); // Should be ASCII
+                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
                 text = encoding.GetString(frame, index, count);
                 index += count; // add the read bytes
             }
@@ -184,7 +184,7 @@ namespace Id3Lib
 
         public static string ReadASCIIEnd(byte[] frame, int index)
         {
-            Encoding encoding = Encoding.GetEncoding(1252); // Should be ASCII
+            Encoding encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
             return encoding.GetString(frame, index, frame.Length - index);
         }
 
@@ -286,7 +286,7 @@ namespace Id3Lib
                 writer.Write((byte)0);
                 return buffer.ToArray();
             }
-            var encoding = Encoding.GetEncoding(1252); // Should be ASCII
+            var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
             writer.Write(encoding.GetBytes(text));
             writer.Write((byte)0); //EOL
             return buffer.ToArray();
@@ -346,7 +346,7 @@ namespace Id3Lib
             {
                 return buffer.ToArray();
             }
-            Encoding encoding = Encoding.GetEncoding(1252); // Should be ASCII
+            Encoding encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
             writer.Write(encoding.GetBytes(text));
             return buffer.ToArray();
         }

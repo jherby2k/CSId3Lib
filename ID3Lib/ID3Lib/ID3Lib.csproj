@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="SharpZipLib.NETStandard" Version="0.86.0.1" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-ci0002" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
   </ItemGroup>
 
 </Project>
