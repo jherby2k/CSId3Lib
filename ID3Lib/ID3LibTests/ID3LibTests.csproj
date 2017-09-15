@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <AssemblyName>ID3Lib.Tests</AssemblyName>
+    <RootNamespace>ID3Lib.Tests</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Resources\221-Compressed.tag" />
+    <None Remove="Resources\230-BarkMoon.tag" />
+    <None Remove="Resources\230-Compressed.tag" />
+    <None Remove="Resources\230-Picture.tag" />
+    <None Remove="Resources\230-SyncedLyrics.tag" />
+    <None Remove="Resources\230-Unicode.tag" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\221-Compressed.tag" />
+    <EmbeddedResource Include="Resources\230-BarkMoon.tag" />
+    <EmbeddedResource Include="Resources\230-Compressed.tag" />
+    <EmbeddedResource Include="Resources\230-Picture.tag" />
+    <EmbeddedResource Include="Resources\230-SyncedLyrics.tag" />
+    <EmbeddedResource Include="Resources\230-Unicode.tag" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.3.0-preview-20170628-02" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.1.18" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.1.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ID3Lib\ID3Lib.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>
