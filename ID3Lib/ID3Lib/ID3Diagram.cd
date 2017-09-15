@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Id3Lib.TagHandler">
+    <Position X="5.5" Y="1.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>CAgAwAAEhEAAAFAIAEIAAAhAiIAAAAAAIAAASEAAAAA=</HashCode>
+      <FileName>TagHandler.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_frameModel" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Id3Lib.FrameModel">
+    <Position X="8.25" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BgAAAABQAAAABAAAAAgAAAAAAAgAgAAAAAAAAAAEAAA=</HashCode>
+      <FileName>FrameModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_tagHeader" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="Id3Lib.Header">
+    <Position X="11" Y="1.75" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>JAAAAIAQkAAACAAJAAAAACIACGBgAAgABAIEAAAAgAA=</HashCode>
+      <FileName>Header.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Id3Lib.ID3v1">
+    <Position X="3.5" Y="3.25" Width="1.5" />
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAACEFEAAAAAIAAJAJDoAAKBAIAAAIACACAFAIAA=</HashCode>
+      <FileName>ID3v1.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Id3Lib.FrameManager">
+    <Position X="3.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAACBAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>FrameManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Font Name="Tahoma" Size="8.4" />
+</ClassDiagram>
