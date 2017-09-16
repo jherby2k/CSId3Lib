@@ -308,7 +308,7 @@ namespace Id3Lib
         public void Deserialize(Stream stream)
         {
             BinaryReader reader = new BinaryReader(stream);
-            var encoding = Encoding.GetEncoding(1252); // Should be ASCII
+            var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
             // check for ID3v1 tag
             reader.BaseStream.Seek(-128, SeekOrigin.End);
 
@@ -405,7 +405,7 @@ namespace Id3Lib
             // open a writer on the underlying stream but don't use 'using'
             // or Dispose will close the underlying stream at the end
             var writer = new BinaryWriter(stream);
-            var encoding = Encoding.GetEncoding(1252); // Should be ASCII
+            var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
 
             writer.Write(_id3, 0, 3); // Write the ID3 TAG ID: 'TAG'
 
