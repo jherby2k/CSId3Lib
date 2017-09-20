@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.7.0-alpha3</Version>
+    <Version>0.7.0-alpha4</Version>
     <Description>ID3 Library</Description>
     <Product>ID3Lib</Product>
     <PackageId>csid3lib</PackageId>
@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <PackageReference Include="SharpZipLib.NETStandard" Version="0.86.0.1" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-ci0027" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0001" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
   </ItemGroup>
 
