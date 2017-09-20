@@ -74,11 +74,13 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            var url = _uri != null ? _uri.AbsoluteUri : String.Empty;
-            writer.Write(TextBuilder.WriteTextEnd(url, TextCode.Ascii));
-            return buffer.ToArray();
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            {
+                var url = _uri != null ? _uri.AbsoluteUri : String.Empty;
+                writer.Write(TextBuilder.WriteTextEnd(url, TextCode.Ascii));
+                return buffer.ToArray();
+            }
         }
         /// <summary>
         /// Default frame description

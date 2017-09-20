@@ -105,22 +105,24 @@ namespace Id3Lib.Frames
         /// <returns>binary frame data</returns>
         public override byte[] Make()
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            writer.Write((byte)_textEncoding);
-            //TODO: Validate language field
-            var language = TextBuilder.WriteASCII(_language);
-            if (language.Length != 3)
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write(new byte[] { (byte)'e', (byte)'n', (byte)'g' });
+                writer.Write((byte) _textEncoding);
+                //TODO: Validate language field
+                var language = TextBuilder.WriteASCII(_language);
+                if (language.Length != 3)
+                {
+                    writer.Write(new byte[] {(byte) 'e', (byte) 'n', (byte) 'g'});
+                }
+                else
+                {
+                    writer.Write(language, 0, 3);
+                }
+                writer.Write(TextBuilder.WriteText(_contents, _textEncoding));
+                writer.Write(TextBuilder.WriteTextEnd(_text, _textEncoding));
+                return buffer.ToArray();
             }
-            else
-            {
-                writer.Write(language, 0, 3);
-            }
-            writer.Write(TextBuilder.WriteText(_contents, _textEncoding));
-            writer.Write(TextBuilder.WriteTextEnd(_text, _textEncoding));
-            return buffer.ToArray();
         }
 
         /// <summary>

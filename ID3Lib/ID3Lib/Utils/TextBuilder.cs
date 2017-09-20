@@ -279,118 +279,133 @@ namespace Id3Lib
 
         public static byte[] WriteASCII(string text)
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte)0);
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    writer.Write((byte) 0);
+                    return buffer.ToArray();
+                }
+                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
+                writer.Write(encoding.GetBytes(text));
+                writer.Write((byte) 0); //EOL
                 return buffer.ToArray();
             }
-            var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-            writer.Write(encoding.GetBytes(text));
-            writer.Write((byte)0); //EOL
-            return buffer.ToArray();
         }
 
         public static byte[] WriteUTF16(string text)
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((ushort)0);
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    writer.Write((ushort) 0);
+                    return buffer.ToArray();
+                }
+                writer.Write((byte) 0xff); //Little endian, we have UTF16BE for big endian
+                writer.Write((byte) 0xfe);
+                var encoding = new UnicodeEncoding(false, false);
+                writer.Write(encoding.GetBytes(text));
+                writer.Write((ushort) 0);
                 return buffer.ToArray();
             }
-            writer.Write((byte)0xff); //Little endian, we have UTF16BE for big endian
-            writer.Write((byte)0xfe);
-            var encoding = new UnicodeEncoding(false, false);
-            writer.Write(encoding.GetBytes(text));
-            writer.Write((ushort)0);
-            return buffer.ToArray();
         }
 
         public static byte[] WriteUTF16BE(string text)
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            var encoding = new UnicodeEncoding(true, false);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((ushort)0);
+                var encoding = new UnicodeEncoding(true, false);
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    writer.Write((ushort) 0);
+                    return buffer.ToArray();
+                }
+                writer.Write(encoding.GetBytes(text));
+                writer.Write((ushort) 0);
                 return buffer.ToArray();
             }
-            writer.Write(encoding.GetBytes(text));
-            writer.Write((ushort)0);
-            return buffer.ToArray();
         }
 
         public static byte[] WriteUTF8(string text)
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte)0);
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    writer.Write((byte) 0);
+                    return buffer.ToArray();
+                }
+                writer.Write(UTF8Encoding.UTF8.GetBytes(text));
+                writer.Write((byte) 0);
                 return buffer.ToArray();
             }
-            writer.Write(UTF8Encoding.UTF8.GetBytes(text));
-            writer.Write((byte)0);
-            return buffer.ToArray();
         }
 
         public static byte[] WriteASCIIEnd(string text)
         {
-            var buffer = new MemoryStream();
-            var writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
+                if (String.IsNullOrEmpty(text))
+                {
+                    return buffer.ToArray();
+                }
+                Encoding encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
+                writer.Write(encoding.GetBytes(text));
                 return buffer.ToArray();
             }
-            Encoding encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-            writer.Write(encoding.GetBytes(text));
-            return buffer.ToArray();
         }
 
         public static byte[] WriteUTF16End(string text)
         {
-            MemoryStream buffer = new MemoryStream(text.Length + 2);
-            BinaryWriter writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (MemoryStream buffer = new MemoryStream(text.Length + 2))
+            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    return buffer.ToArray();
+                }
+                UnicodeEncoding encoding;
+                writer.Write((byte) 0xff); // Little endian
+                writer.Write((byte) 0xfe);
+                encoding = new UnicodeEncoding(false, false);
+                writer.Write(encoding.GetBytes(text));
                 return buffer.ToArray();
             }
-            UnicodeEncoding encoding;
-            writer.Write((byte)0xff); // Little endian
-            writer.Write((byte)0xfe);
-            encoding = new UnicodeEncoding(false, false);
-            writer.Write(encoding.GetBytes(text));
-            return buffer.ToArray();
-
         }
 
         public static byte[] WriteUTF16BEEnd(string text)
         {
-            MemoryStream buffer = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (MemoryStream buffer = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    return buffer.ToArray();
+                }
+                UnicodeEncoding encoding = new UnicodeEncoding(true, false);
+                writer.Write(encoding.GetBytes(text));
                 return buffer.ToArray();
             }
-            UnicodeEncoding encoding = new UnicodeEncoding(true, false);
-            writer.Write(encoding.GetBytes(text));
-            return buffer.ToArray();
         }
 
         public static byte[] WriteUTF8End(string text)
         {
-            MemoryStream buffer = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(buffer);
-            if (String.IsNullOrEmpty(text)) //Write a null string
+            using (MemoryStream buffer = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
+                if (String.IsNullOrEmpty(text)) //Write a null string
+                {
+                    return buffer.ToArray();
+                }
+                writer.Write(UTF8Encoding.UTF8.GetBytes(text));
                 return buffer.ToArray();
             }
-            writer.Write(UTF8Encoding.UTF8.GetBytes(text));
-            return buffer.ToArray();
         }
         #endregion
     }

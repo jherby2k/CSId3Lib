@@ -4,7 +4,9 @@ using ICSharpCode.SharpZipLib.Zip.Compression.Streams;
 using Id3Lib.Exceptions;
 using Id3Lib.Frames;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 
 namespace Id3Lib
 {
@@ -71,50 +73,65 @@ namespace Id3Lib
             uint index = 0;
             uint size = (uint)buffer.Length;
             Stream stream = new MemoryStream(buffer, false);
-            var reader = new BinaryReader(stream);
-            if (GetGrouping(flags))
+            var streamsToClose = new List<Stream>(3) {stream};
+            try
             {
-                frame.Group = reader.ReadByte();
-                index++;
-            }
-            if (frame.Compression)
-            {
-                switch (Version)
+                using (var reader = new BinaryReader(stream, Encoding.UTF8, false))
                 {
-                    case 3:
+                    if (GetGrouping(flags))
+                    {
+                        frame.Group = reader.ReadByte();
+                        index++;
+                    }
+                    if (frame.Compression)
+                    {
+                        switch (Version)
                         {
-                            size = Swap.UInt32(reader.ReadUInt32());
-                            break;
+                            case 3:
+                            {
+                                size = Swap.UInt32(reader.ReadUInt32());
+                                break;
+                            }
+                            case 4:
+                            {
+                                size = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
+                                break;
+                            }
+                            default:
+                            {
+                                throw new NotImplementedException("ID3v2 Version " + Version + " is not supported.");
+                            }
                         }
-                    case 4:
-                        {
-                            size = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
-                            break;
-                        }
-                    default:
-                        {
-                            throw new NotImplementedException("ID3v2 Version " + Version + " is not supported.");
-                        }
+                        index = 0;
+                        stream = new InflaterInputStream(stream);
+                        streamsToClose.Add(stream);
+                    }
+                    if (frame.Encryption)
+                    {
+                        throw new NotImplementedException(
+                            "Encryption is not implemented, consequently it is not supported.");
+                    }
+                    if (frame.Unsynchronisation)
+                    {
+                        var memoryStream = new MemoryStream();
+                        streamsToClose.Add(memoryStream);
+                        size = Sync.Unsafe(stream, memoryStream, size);
+                        index = 0;
+                        memoryStream.Seek(0, SeekOrigin.Begin);
+                        stream = memoryStream;
+                    }
+                    byte[] frameBuffer = new byte[size - index];
+                    stream.Read(frameBuffer, 0, (int)(size - index));
+                    frame.Parse(frameBuffer);
+                    return frame;
                 }
-                index = 0;
-                stream = new InflaterInputStream(stream);
             }
-            if (frame.Encryption)
+            finally
             {
-                throw new NotImplementedException("Encryption is not implemented, consequently it is not supported.");
+                foreach (var streamToClose in streamsToClose)
+                    streamToClose.Close();
+                streamsToClose.Clear();
             }
-            if (frame.Unsynchronisation)
-            {
-                var memoryStream = new MemoryStream();
-                size = Sync.Unsafe(stream, memoryStream, size);
-                index = 0;
-                memoryStream.Seek(0, SeekOrigin.Begin);
-                stream = memoryStream;
-            }
-            byte[] frameBuffer = new byte[size - index];
-            stream.Read(frameBuffer, 0, (int)(size - index));
-            frame.Parse(frameBuffer);
-            return frame;
         }
 
         /// <summary>
@@ -128,68 +145,82 @@ namespace Id3Lib
             var buffer = frame.Make();
 
             var memoryStream = new MemoryStream();
-            var writer = new BinaryWriter(memoryStream);
-
-            if (frame.Group.HasValue)
-                writer.Write((byte)frame.Group);
-
-            if (frame.Compression)
+            var streamsToClose = new List<Stream>(2) {memoryStream};
+            try
             {
-                switch (Version)
+                using (var writer = new BinaryWriter(memoryStream, Encoding.UTF8, true))
                 {
-                    case 3:
-                        {
-                            writer.Write(Swap.Int32(buffer.Length));
-                            break;
-                        }
-                    case 4:
-                        {
-                            writer.Write(Sync.UnsafeBigEndian(Swap.UInt32((uint)buffer.Length)));
-                            break;
-                        }
-                    default:
-                        {
-                            throw new NotImplementedException("ID3v2 Version " + Version + " is not supported.");
-                        }
-                }
-                var buf = new byte[2048];
-                var deflater = new Deflater(Deflater.BEST_COMPRESSION);
-                deflater.SetInput(buffer, 0, buffer.Length);
-                deflater.Finish();
-                while (!deflater.IsNeedingInput)
-                {
-                    int len = deflater.Deflate(buf, 0, buf.Length);
-                    if (len <= 0)
+                    if (frame.Group.HasValue)
+                        writer.Write((byte) frame.Group);
+
+                    if (frame.Compression)
                     {
-                        break;
+                        switch (Version)
+                        {
+                            case 3:
+                            {
+                                writer.Write(Swap.Int32(buffer.Length));
+                                break;
+                            }
+                            case 4:
+                            {
+                                writer.Write(Sync.UnsafeBigEndian(Swap.UInt32((uint) buffer.Length)));
+                                break;
+                            }
+                            default:
+                            {
+                                throw new NotImplementedException("ID3v2 Version " + Version + " is not supported.");
+                            }
+                        }
+                        var buf = new byte[2048];
+                        var deflater = new Deflater(Deflater.BEST_COMPRESSION);
+                        deflater.SetInput(buffer, 0, buffer.Length);
+                        deflater.Finish();
+                        while (!deflater.IsNeedingInput)
+                        {
+                            int len = deflater.Deflate(buf, 0, buf.Length);
+                            if (len <= 0)
+                            {
+                                break;
+                            }
+                            memoryStream.Write(buf, 0, len);
+                        }
+
+                        if (!deflater.IsNeedingInput)
+                        {
+                            //TODO: Skip and remove invalid frames.
+                            throw new InvalidFrameException("Can't decompress frame '" + frame.FrameId +
+                                                            "' missing data");
+                        }
                     }
-                    memoryStream.Write(buf, 0, len);
+                    else
+                    {
+                        memoryStream.Write(buffer, 0, buffer.Length);
+                    }
+
+                    if (frame.Encryption)
+                    {
+                        //TODO: Encryption
+                        throw new NotImplementedException(
+                            "Encryption is not implemented, consequently it is not supported.");
+                    }
+
+                    if (frame.Unsynchronisation)
+                    {
+                        MemoryStream synchStream = new MemoryStream();
+                        streamsToClose.Add(synchStream);
+                        Sync.Unsafe(memoryStream, synchStream, (uint) memoryStream.Position);
+                        memoryStream = synchStream;
+                    }
+                    return memoryStream.ToArray();
                 }
-
-                if (!deflater.IsNeedingInput)
-                {
-                    //TODO: Skip and remove invalid frames.
-                    throw new InvalidFrameException("Can't decompress frame '" + frame.FrameId + "' missing data");
-                }
             }
-            else
+            finally
             {
-                memoryStream.Write(buffer, 0, buffer.Length);
+                foreach (var streamToClose in streamsToClose)
+                    streamToClose.Close();
+                streamsToClose.Clear();
             }
-
-            if (frame.Encryption)
-            {
-                //TODO: Encryption
-                throw new NotImplementedException("Encryption is not implemented, consequently it is not supported.");
-            }
-
-            if (frame.Unsynchronisation)
-            {
-                MemoryStream synchStream = new MemoryStream();
-                Sync.Unsafe(memoryStream, synchStream, (uint)memoryStream.Position);
-                memoryStream = synchStream;
-            }
-            return memoryStream.ToArray();
         }
 
         private void SetFlags(FrameBase frame, ushort flags)

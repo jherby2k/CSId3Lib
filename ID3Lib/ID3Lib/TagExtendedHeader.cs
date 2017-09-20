@@ -1,6 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System;
 using System.IO;
+using System.Text;
 using Id3Lib.Exceptions;
 
 namespace Id3Lib
@@ -40,8 +41,8 @@ namespace Id3Lib
             if (stream == null)
                 throw new ArgumentNullException("stream");
 
-			var reader = new BinaryReader(stream);
-			_size = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
+                _size = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
 			if(_size < 6)
                 throw new InvalidFrameException("Corrupt id3 extended header.");
 			
@@ -56,9 +57,9 @@ namespace Id3Lib
 		/// <param name="stream">Binary stream containing a ID3 extended header</param>
 		public void Serialize(Stream stream)
 		{
-			BinaryWriter writer = new BinaryWriter(stream);
-			// TODO: implement the extended header, for now write the original header
-			writer.Write(_extendedHeader);
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+                // TODO: implement the extended header, for now write the original header
+                writer.Write(_extendedHeader);
 		}
 		#endregion
 	}

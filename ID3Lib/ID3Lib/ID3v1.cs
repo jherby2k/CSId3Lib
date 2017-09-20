@@ -307,45 +307,49 @@ namespace Id3Lib
         /// <param name="src">Binary stream to load</param>
         public void Deserialize(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
-            var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-            // check for ID3v1 tag
-            reader.BaseStream.Seek(-128, SeekOrigin.End);
-
-            byte[] idTag = new byte[3];
-
-            // Read the tag identifier
-            reader.Read(idTag, 0, 3);
-            // Compare the read tag
-            if (Memory.Compare(_id3, idTag) != true)
-                throw new TagNotFoundException("ID3v1 tag was not found");
-
-            byte[] tag = new byte[30]; // Allocate ID3 tag
-
-            reader.Read(tag, 0, 30);
-            _song = GetString(encoding, tag);
-
-            reader.Read(tag, 0, 30);
-            _artist = GetString(encoding, tag);
-
-            reader.Read(tag, 0, 30);
-            _album = GetString(encoding, tag);
-
-            reader.Read(tag, 0, 4);
-            _year = (tag[0] != 0 && tag[1] != 0 && tag[2] != 0 && tag[3] != 0) ? encoding.GetString(tag, 0, 4) : String.Empty;
-
-            reader.Read(tag, 0, 30);
-            if (tag[28] == 0) //Track number was stored at position 29 later hack of the original standard.
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                _track = tag[29];
-                _comment = encoding.GetString(tag, 0, Memory.FindByte(tag, 0x00, 0));
+                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
+                // check for ID3v1 tag
+                reader.BaseStream.Seek(-128, SeekOrigin.End);
+
+                byte[] idTag = new byte[3];
+
+                // Read the tag identifier
+                reader.Read(idTag, 0, 3);
+                // Compare the read tag
+                if (Memory.Compare(_id3, idTag) != true)
+                    throw new TagNotFoundException("ID3v1 tag was not found");
+
+                byte[] tag = new byte[30]; // Allocate ID3 tag
+
+                reader.Read(tag, 0, 30);
+                _song = GetString(encoding, tag);
+
+                reader.Read(tag, 0, 30);
+                _artist = GetString(encoding, tag);
+
+                reader.Read(tag, 0, 30);
+                _album = GetString(encoding, tag);
+
+                reader.Read(tag, 0, 4);
+                _year = (tag[0] != 0 && tag[1] != 0 && tag[2] != 0 && tag[3] != 0)
+                    ? encoding.GetString(tag, 0, 4)
+                    : String.Empty;
+
+                reader.Read(tag, 0, 30);
+                if (tag[28] == 0) //Track number was stored at position 29 later hack of the original standard.
+                {
+                    _track = tag[29];
+                    _comment = encoding.GetString(tag, 0, Memory.FindByte(tag, 0x00, 0));
+                }
+                else
+                {
+                    _track = 0;
+                    _comment = GetString(encoding, tag);
+                }
+                _genre = reader.ReadByte();
             }
-            else
-            {
-                _track = 0;
-                _comment = GetString(encoding, tag);
-            }
-            _genre = reader.ReadByte();
         }
 
         /// <summary>
@@ -356,42 +360,41 @@ namespace Id3Lib
         {
             var idTag = new byte[3];
 
-            // open a reader on the underlying stream but don't use 'using'
-            // or Dispose will close the underlying stream at the end
-            var reader = new BinaryReader(stream);
-
-            // check for ID3v1 tag
-            reader.BaseStream.Seek(-128, SeekOrigin.End);
-
-            // Read the tag identifier
-            reader.Read(idTag, 0, 3);
-
-            // Is there a ID3v1 tag already?
-            if (Memory.Compare(_id3, idTag))
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                //Found a ID3 tag so we will over write the old tag
-                // (and the 'TAG' label too, so WriteAtStreamPosition is clean)
-                stream.Seek(-128, SeekOrigin.End);
+                // check for ID3v1 tag
+                reader.BaseStream.Seek(-128, SeekOrigin.End);
 
-                Write(stream);
-            }
-            else
-            {
-                //Create a new Tag
-                var position = stream.Position;
-                stream.Seek(0, SeekOrigin.End);
-                //TODO: fix this ugly code, at first make the error visible to the user by some means,
-                // a start can be throwing the exception in an inner exception 
-                try
+                // Read the tag identifier
+                reader.Read(idTag, 0, 3);
+
+                // Is there a ID3v1 tag already?
+                if (Memory.Compare(_id3, idTag))
                 {
+                    //Found a ID3 tag so we will over write the old tag
+                    // (and the 'TAG' label too, so WriteAtStreamPosition is clean)
+                    stream.Seek(-128, SeekOrigin.End);
+
                     Write(stream);
                 }
-                catch (Exception e)
+                else
                 {
-                    // There was an error while creating the tag
-                    // Restore the file to the original state, I hope.
-                    stream.SetLength(position);
-                    throw e;
+                    //Create a new Tag
+                    var position = stream.Position;
+                    stream.Seek(0, SeekOrigin.End);
+                    //TODO: fix this ugly code, at first make the error visible to the user by some means,
+                    // a start can be throwing the exception in an inner exception 
+                    try
+                    {
+                        Write(stream);
+                    }
+                    catch (Exception e)
+                    {
+                        // There was an error while creating the tag
+                        // Restore the file to the original state, I hope.
+                        stream.SetLength(position);
+                        throw e;
+                    }
                 }
             }
         }
@@ -402,67 +405,67 @@ namespace Id3Lib
         /// <param name="stream"></param>
         public void Write(Stream stream)
         {
-            // open a writer on the underlying stream but don't use 'using'
-            // or Dispose will close the underlying stream at the end
-            var writer = new BinaryWriter(stream);
-            var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-
-            writer.Write(_id3, 0, 3); // Write the ID3 TAG ID: 'TAG'
-
-            byte[] tag = new byte[30];
-
-            if (_song.Length > 30)
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
             {
-                _song = _song.Substring(0, 30);
-            }
-            encoding.GetBytes(_song, 0, _song.Length, tag, 0);
-            writer.Write(tag, 0, 30);
-            Memory.Clear(tag, 0, 30);
+                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
 
-            if (_artist.Length > 30)
-            {
-                _artist = _artist.Substring(0, 30);
-            }
-            encoding.GetBytes(_artist, 0, _artist.Length, tag, 0);
-            writer.Write(tag, 0, 30);
-            Memory.Clear(tag, 0, 30);
+                writer.Write(_id3, 0, 3); // Write the ID3 TAG ID: 'TAG'
 
-            if (_album.Length > 30)
-            {
-                _album = _album.Substring(0, 30);
-            }
-            encoding.GetBytes(_album, 0, _album.Length, tag, 0);
-            writer.Write(tag, 0, 30);
-            Memory.Clear(tag, 0, 30);
+                byte[] tag = new byte[30];
 
-            if (String.IsNullOrEmpty(_year))
-            {
+                if (_song.Length > 30)
+                {
+                    _song = _song.Substring(0, 30);
+                }
+                encoding.GetBytes(_song, 0, _song.Length, tag, 0);
+                writer.Write(tag, 0, 30);
                 Memory.Clear(tag, 0, 30);
+
+                if (_artist.Length > 30)
+                {
+                    _artist = _artist.Substring(0, 30);
+                }
+                encoding.GetBytes(_artist, 0, _artist.Length, tag, 0);
+                writer.Write(tag, 0, 30);
+                Memory.Clear(tag, 0, 30);
+
+                if (_album.Length > 30)
+                {
+                    _album = _album.Substring(0, 30);
+                }
+                encoding.GetBytes(_album, 0, _album.Length, tag, 0);
+                writer.Write(tag, 0, 30);
+                Memory.Clear(tag, 0, 30);
+
+                if (String.IsNullOrEmpty(_year))
+                {
+                    Memory.Clear(tag, 0, 30);
+                }
+                else
+                {
+                    UInt16 year;
+                    if (!UInt16.TryParse(_year, out year))
+                        _year = "0";
+
+                    if (year > 9999)
+                        _year = "0";
+
+                    encoding.GetBytes(_year, 0, _year.Length, tag, 0);
+                }
+                writer.Write(tag, 0, 4);
+                Memory.Clear(tag, 0, 30);
+
+                if (_comment.Length > 28)
+                    _comment = _comment.Substring(0, 28);
+
+                encoding.GetBytes(_comment, 0, _comment.Length, tag, 0);
+
+                writer.Write(tag, 0, 28);
+                Memory.Clear(tag, 0, 30);
+                writer.Write((byte) 0);
+                writer.Write(_track);
+                writer.Write(_genre);
             }
-            else
-            {
-                UInt16 year;
-                if (!UInt16.TryParse(_year, out year))
-                    _year = "0";
-
-                if (year > 9999)
-                    _year = "0";
-
-                encoding.GetBytes(_year, 0, _year.Length, tag, 0);
-            }
-            writer.Write(tag, 0, 4);
-            Memory.Clear(tag, 0, 30);
-
-            if (_comment.Length > 28)
-                _comment = _comment.Substring(0, 28);
-
-            encoding.GetBytes(_comment, 0, _comment.Length, tag, 0);
-
-            writer.Write(tag, 0, 28);
-            Memory.Clear(tag, 0, 30);
-            writer.Write((byte)0);
-            writer.Write(_track);
-            writer.Write(_genre);
         }
         #endregion
     }

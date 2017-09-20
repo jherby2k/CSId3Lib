@@ -3,6 +3,7 @@ using Id3Lib.Exceptions;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text;
 
 namespace Id3Lib
 {
@@ -204,16 +205,15 @@ namespace Id3Lib
         /// <param name="stream">Stream to save header</param>
         public void Serialize(Stream stream)
         {
-            // open a writer on the underlying stream but don't use 'using'
-            // or Dispose will close the underlying stream at the end
-            BinaryWriter writer = new BinaryWriter(stream);
-
-            //TODO: Validate version and revision we support
-            writer.Write(_id3);         // ID3v2/file identifier
-            writer.Write(_id3Version);  // ID3v2 version, e.g. 3 or 4
-            writer.Write(_id3Revision); // ID3v2 revision, e.g. 0
-            writer.Write(_id3Flags);    // ID3v2 flags
-            writer.Write(Swap.UInt32(Sync.Safe(_id3RawSize + _paddingSize)));
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            {
+                //TODO: Validate version and revision we support
+                writer.Write(_id3); // ID3v2/file identifier
+                writer.Write(_id3Version); // ID3v2 version, e.g. 3 or 4
+                writer.Write(_id3Revision); // ID3v2 revision, e.g. 0
+                writer.Write(_id3Flags); // ID3v2 flags
+                writer.Write(Swap.UInt32(Sync.Safe(_id3RawSize + _paddingSize)));
+            }
         }
 
         /// <summary>
@@ -222,16 +222,15 @@ namespace Id3Lib
         /// <param name="stream">Stream to save header</param>
         public void SerializeFooter(Stream stream)
         {
-            // open a writer on the underlying stream but don't use 'using'
-            // or Dispose will close the underlying stream at the end
-            BinaryWriter writer = new BinaryWriter(stream);
-
-            //TODO: Validate version and revision we support
-            writer.Write(_3di);         // ID3v2/file footer identifier; ID3 backwards.
-            writer.Write(_id3Version);  // ID3v2 version, e.g. 3 or 4
-            writer.Write(_id3Revision); // ID3v2 revision, e.g. 0
-            writer.Write(_id3Flags);    // ID3v2 flags
-            writer.Write(Swap.UInt32(Sync.Safe(_id3RawSize)));
+            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            {
+                //TODO: Validate version and revision we support
+                writer.Write(_3di);         // ID3v2/file footer identifier; ID3 backwards.
+                writer.Write(_id3Version);  // ID3v2 version, e.g. 3 or 4
+                writer.Write(_id3Revision); // ID3v2 revision, e.g. 0
+                writer.Write(_id3Flags);    // ID3v2 flags
+                writer.Write(Swap.UInt32(Sync.Safe(_id3RawSize)));
+            }
         }
 
         /// <summary>
@@ -240,30 +239,32 @@ namespace Id3Lib
         /// <param name="stream">Stream to load header</param>
         public void Deserialize(Stream stream)
         {
-            BinaryReader reader = new BinaryReader(stream);
-            byte[] idTag = new byte[3];
+            using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true))
+            {
+                byte[] idTag = new byte[3];
 
-            // Read the tag identifier
-            reader.Read(idTag, 0, 3);
-            if (Memory.Compare(_id3, idTag) == false)
-                throw new TagNotFoundException("ID3v2 tag identifier was not found");
+                // Read the tag identifier
+                reader.Read(idTag, 0, 3);
+                if (Memory.Compare(_id3, idTag) == false)
+                    throw new TagNotFoundException("ID3v2 tag identifier was not found");
 
-            // Get the id3v2 version byte
-            _id3Version = reader.ReadByte();
-            if (_id3Version == 0xff)
-                throw new InvalidTagException("Corrupt header, invalid ID3v2 version.");
+                // Get the id3v2 version byte
+                _id3Version = reader.ReadByte();
+                if (_id3Version == 0xff)
+                    throw new InvalidTagException("Corrupt header, invalid ID3v2 version.");
 
-            // Get the id3v2 revision byte
-            _id3Revision = reader.ReadByte();
-            if (_id3Revision == 0xff)
-                throw new InvalidTagException("Corrupt header, invalid ID3v2 revision.");
+                // Get the id3v2 revision byte
+                _id3Revision = reader.ReadByte();
+                if (_id3Revision == 0xff)
+                    throw new InvalidTagException("Corrupt header, invalid ID3v2 revision.");
 
-            // Get the id3v2 flag byte, only read what I understand
-            _id3Flags = (byte)(0xf0 & reader.ReadByte());
-            // Get the id3v2 size, swap and un-sync the integer
-            _id3RawSize = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
-            if (_id3RawSize == 0)
-                throw new InvalidTagException("Corrupt header, tag size can't be zero.");
+                // Get the id3v2 flag byte, only read what I understand
+                _id3Flags = (byte) (0xf0 & reader.ReadByte());
+                // Get the id3v2 size, swap and un-sync the integer
+                _id3RawSize = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
+                if (_id3RawSize == 0)
+                    throw new InvalidTagException("Corrupt header, tag size can't be zero.");
+            }
 
         }
         #endregion

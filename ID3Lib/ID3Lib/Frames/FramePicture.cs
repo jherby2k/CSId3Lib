@@ -219,14 +219,16 @@ namespace Id3Lib.Frames
         /// <returns>picture binary representation</returns>
         public override byte[] Make()
         {
-            MemoryStream buffer = new MemoryStream();
-            BinaryWriter writer = new BinaryWriter(buffer);
-            writer.Write((byte)_textEncoding);
-            writer.Write(TextBuilder.WriteASCII(_mime));
-            writer.Write((byte)_pictureType);
-            writer.Write(TextBuilder.WriteText(_description, _textEncoding));
-            writer.Write(_pictureData);
-            return buffer.ToArray();
+            using (MemoryStream buffer = new MemoryStream())
+            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            {
+                writer.Write((byte) _textEncoding);
+                writer.Write(TextBuilder.WriteASCII(_mime));
+                writer.Write((byte) _pictureType);
+                writer.Write(TextBuilder.WriteText(_description, _textEncoding));
+                writer.Write(_pictureData);
+                return buffer.ToArray();
+            }
         }
 
         /// <summary>

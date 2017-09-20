@@ -86,12 +86,14 @@ namespace Id3Lib.Frames
 		/// <returns>binary frame data</returns>
 		public override byte[] Make()
 		{
-			MemoryStream buffer = new MemoryStream();
-			BinaryWriter writer = new BinaryWriter(buffer);
-			writer.Write((byte)_textEncoding);
-			writer.Write(TextBuilder.WriteText(_contents,_textEncoding));
-			writer.Write(TextBuilder.WriteTextEnd(_text,_textEncoding));
-			return buffer.ToArray();
+            using (MemoryStream buffer = new MemoryStream())
+		    using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+		    {
+		        writer.Write((byte) _textEncoding);
+		        writer.Write(TextBuilder.WriteText(_contents, _textEncoding));
+		        writer.Write(TextBuilder.WriteTextEnd(_text, _textEncoding));
+		        return buffer.ToArray();
+		    }
 		}
 
 		/// <summary>

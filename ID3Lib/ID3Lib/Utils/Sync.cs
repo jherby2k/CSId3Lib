@@ -1,6 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System;
 using System.IO;
+using System.Text;
 using Id3Lib.Exceptions;
 
 namespace Id3Lib
@@ -104,33 +105,34 @@ namespace Id3Lib
         /// <returns>Number of bytes removed from the original stream</returns>
         public static uint Unsafe(Stream src, Stream dst, uint size)
         {
-            var writer = new BinaryWriter(dst);
-            var reader = new BinaryReader(src);
-
-            byte last = 0;
-            uint syncs = 0, count = 0;
-
-            while (count < size)
+            using (var writer = new BinaryWriter(dst, Encoding.UTF8, true))
+            using (var reader = new BinaryReader(src, Encoding.UTF8, true))
             {
-                byte val = reader.ReadByte();
-                if (last == 0xFF && val == 0x00)
+                byte last = 0;
+                uint syncs = 0, count = 0;
+
+                while (count < size)
                 {
-                    syncs++; // skip the sync byte
+                    byte val = reader.ReadByte();
+                    if (last == 0xFF && val == 0x00)
+                    {
+                        syncs++; // skip the sync byte
+                    }
+                    else
+                    {
+                        writer.Write(val);
+                    }
+                    last = val;
+                    count++;
                 }
-                else
+                if (last == 0xFF)
                 {
-                    writer.Write(val);
+                    writer.Write((byte) 0x00);
+                    syncs++;
                 }
-                last = val;
-                count++;
+                dst.Seek(0, SeekOrigin.Begin);
+                return syncs; //bytes removed from stream
             }
-            if (last == 0xFF)
-            {
-                writer.Write((byte)0x00);
-                syncs++;
-            }
-            dst.Seek(0, SeekOrigin.Begin);
-            return syncs; //bytes removed from stream
         }
 
         /// <summary>
@@ -142,30 +144,31 @@ namespace Id3Lib
         /// <returns>Number of bytes added to the original stream</returns>
         public static uint Safe(Stream src, Stream dst, uint count)
         {
-            var writer = new BinaryWriter(dst);
-            var reader = new BinaryReader(src);
-
-            byte last = 0;
-            uint syncs = 0;
-
-            while (count > 0)
+            using (var writer = new BinaryWriter(dst, Encoding.UTF8, true))
+            using (var reader = new BinaryReader(src, Encoding.UTF8, true))
             {
-                byte val = reader.ReadByte();
-                if (last == 0xFF && (val == 0x00 || val >= 0xE0))
+                byte last = 0;
+                uint syncs = 0;
+
+                while (count > 0)
                 {
-                    writer.Write((byte)0x00);
+                    byte val = reader.ReadByte();
+                    if (last == 0xFF && (val == 0x00 || val >= 0xE0))
+                    {
+                        writer.Write((byte) 0x00);
+                        syncs++;
+                    }
+                    last = val;
+                    writer.Write(val);
+                    count--;
+                }
+                if (last == 0xFF)
+                {
+                    writer.Write((byte) 0x00);
                     syncs++;
                 }
-                last = val;
-                writer.Write(val);
-                count--;
+                return syncs; // bytes added to the stream
             }
-            if (last == 0xFF)
-            {
-                writer.Write((byte)0x00);
-                syncs++;
-            }
-            return syncs; // bytes added to the stream
         }
         #endregion
     }
