@@ -1,7 +1,6 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Text;
 using Id3Lib.Exceptions;
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Id3Lib.Frames

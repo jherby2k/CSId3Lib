@@ -1,7 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System;
-using System.Text;
 using System.IO;
+using System.Text;
 
 namespace Id3Lib.Frames
 {

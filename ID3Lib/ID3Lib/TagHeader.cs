@@ -1,6 +1,5 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using Id3Lib.Exceptions;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
@@ -183,8 +182,6 @@ namespace Id3Lib
         {
             set
             {
-                Debug.Assert(value >= 0);
-
                 if (value > 0)
                 {
                     Footer = false;

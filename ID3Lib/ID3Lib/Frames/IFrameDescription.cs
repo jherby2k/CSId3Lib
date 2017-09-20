@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Id3Lib.Frames
+﻿namespace Id3Lib.Frames
 {
     /// <summary>
     /// Frame description

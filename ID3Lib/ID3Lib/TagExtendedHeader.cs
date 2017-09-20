@@ -1,20 +1,20 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
+using Id3Lib.Exceptions;
 using System;
 using System.IO;
 using System.Text;
-using Id3Lib.Exceptions;
 
 namespace Id3Lib
 {
-	/// <summary>
-	/// ID3 Extended Header
-	/// </summary>
-	/// <remarks>
-	/// The extended header contains information that can provide further
-	/// insight in the structure of the tag, but is not vital to the correct
-	/// parsing of the tag information; hence the extended header is optional.
-	/// </remarks>
-	public class TagExtendedHeader
+    /// <summary>
+    /// ID3 Extended Header
+    /// </summary>
+    /// <remarks>
+    /// The extended header contains information that can provide further
+    /// insight in the structure of the tag, but is not vital to the correct
+    /// parsing of the tag information; hence the extended header is optional.
+    /// </remarks>
+    public class TagExtendedHeader
 	{
 		#region Fields
 		private uint _size;

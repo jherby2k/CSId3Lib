@@ -1,8 +1,8 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
+using Id3Lib.Exceptions;
 using System;
 using System.IO;
 using System.Text;
-using Id3Lib.Exceptions;
 
 namespace Id3Lib
 {

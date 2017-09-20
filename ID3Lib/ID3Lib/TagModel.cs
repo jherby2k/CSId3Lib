@@ -1,10 +1,10 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
+using Id3Lib.Frames;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Diagnostics.CodeAnalysis;
 using System.Collections.ObjectModel;
-using Id3Lib.Frames;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 
 namespace Id3Lib
 {

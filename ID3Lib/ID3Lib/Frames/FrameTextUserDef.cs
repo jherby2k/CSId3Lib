@@ -1,13 +1,12 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Text;
 using System.IO;
+using System.Text;
 
 namespace Id3Lib.Frames
 {
-	/// <summary>
+    /// <summary>
     /// Manages User defined text TXXX Frames
-	/// </summary>
+    /// </summary>
     /// <remarks>
     /// Text encoding        $xx
     /// Content descriptor   text string according to encoding, $00 (00)

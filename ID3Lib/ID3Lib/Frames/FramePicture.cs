@@ -1,12 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Text;
-using System.IO;
-using System.Drawing;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Jpeg;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Text;
 
 namespace Id3Lib.Frames
 {

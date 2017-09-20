@@ -1,10 +1,6 @@
 ﻿// Copyright(C) 2002-2009 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Id3Lib;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 
 namespace Id3Lib.Tests

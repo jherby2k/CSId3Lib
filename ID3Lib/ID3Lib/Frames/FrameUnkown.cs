@@ -1,17 +1,14 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Text;
-using System.IO;
 
 namespace Id3Lib.Frames
 {
-	/// <summary>
-	/// Container for unknown frames.
-	/// </summary>
-	/// <remarks>
-	/// The <b>FrameUnknown</b> class handles unknown frames so they can be restored
-	/// or discarded later.
-	/// </remarks>
+    /// <summary>
+    /// Container for unknown frames.
+    /// </summary>
+    /// <remarks>
+    /// The <b>FrameUnknown</b> class handles unknown frames so they can be restored
+    /// or discarded later.
+    /// </remarks>
     public class FrameUnknown : FrameBase
 	{
 		#region Fields

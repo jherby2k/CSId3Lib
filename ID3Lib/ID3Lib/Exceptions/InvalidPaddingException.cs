@@ -1,9 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System;
-using System.Globalization;
-using System.Security.Permissions;
-using System.Runtime.Serialization;
 using System.Diagnostics;
+using System.Globalization;
+using System.Runtime.Serialization;
+using System.Security.Permissions;
 
 namespace Id3Lib.Exceptions
 {

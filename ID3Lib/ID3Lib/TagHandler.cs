@@ -280,12 +280,12 @@ namespace Id3Lib
             {
                 if (!String.IsNullOrEmpty(message))
                 {
-                    FrameFullText frameLCText = (FrameFullText)FrameFactory.Build(frameId);
-                    frameLCText.TextCode = _textCode;
-                    frameLCText.Language = "eng";
-                    frameLCText.Description = string.Empty;
-                    frameLCText.Text = message;
-                    _frameModel.Add(frameLCText);
+                    FrameFullText frameLcText = (FrameFullText)FrameFactory.Build(frameId);
+                    frameLcText.TextCode = _textCode;
+                    frameLcText.Language = "eng";
+                    frameLcText.Description = string.Empty;
+                    frameLcText.Text = message;
+                    _frameModel.Add(frameLcText);
                 }
             }
         }

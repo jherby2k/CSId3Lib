@@ -1,9 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
-using System.Text;
-using System.IO;
-using System.Diagnostics.CodeAnalysis;
 using Id3Lib.Exceptions;
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Text;
 
 namespace Id3Lib
 {
@@ -175,7 +175,7 @@ namespace Id3Lib
             }
             if (count > 0)
             {
-                text = UTF8Encoding.UTF8.GetString(frame, index, count);
+                text = Encoding.UTF8.GetString(frame, index, count);
                 index += count; // add the read bytes
             }
             index++; // jump an end of line byte
@@ -219,7 +219,7 @@ namespace Id3Lib
 
         public static string ReadUTF8End(byte[] frame, int index)
         {
-            return UTF8Encoding.UTF8.GetString(frame, index, frame.Length - index);
+            return Encoding.UTF8.GetString(frame, index, frame.Length - index);
         }
 
         // Write routines
@@ -340,7 +340,7 @@ namespace Id3Lib
                     writer.Write((byte) 0);
                     return buffer.ToArray();
                 }
-                writer.Write(UTF8Encoding.UTF8.GetBytes(text));
+                writer.Write(Encoding.UTF8.GetBytes(text));
                 writer.Write((byte) 0);
                 return buffer.ToArray();
             }
@@ -403,7 +403,7 @@ namespace Id3Lib
                 {
                     return buffer.ToArray();
                 }
-                writer.Write(UTF8Encoding.UTF8.GetBytes(text));
+                writer.Write(Encoding.UTF8.GetBytes(text));
                 return buffer.ToArray();
             }
         }

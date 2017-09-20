@@ -166,7 +166,7 @@ namespace Id3Lib
             frameFullText.Text = _comment;
             frameModel.Add(frameFullText);
 
-            if (_genre >= 0 && _genre < _genres.Length)
+            if (_genre < _genres.Length)
             {
                 // from suggestion in http://sourceforge.net/tracker2/?func=detail&aid=920249&group_id=89188&atid=589317
                 frameText = new FrameText("TCON");
@@ -304,7 +304,7 @@ namespace Id3Lib
         /// <summary>
         /// Load tag from stream
         /// </summary>
-        /// <param name="src">Binary stream to load</param>
+        /// <param name="stream">Binary stream to load</param>
         public void Deserialize(Stream stream)
         {
             using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true))
@@ -388,12 +388,12 @@ namespace Id3Lib
                     {
                         Write(stream);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         // There was an error while creating the tag
                         // Restore the file to the original state, I hope.
                         stream.SetLength(position);
-                        throw e;
+                        throw;
                     }
                 }
             }

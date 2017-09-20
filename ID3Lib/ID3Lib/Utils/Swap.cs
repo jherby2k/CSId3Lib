@@ -1,5 +1,4 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
 
 namespace Id3Lib
 {

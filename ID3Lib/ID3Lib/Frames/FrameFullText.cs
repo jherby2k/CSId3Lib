@@ -1,7 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System;
-using System.Text;
 using System.IO;
+using System.Text;
 
 namespace Id3Lib.Frames
 {
@@ -89,7 +89,7 @@ namespace Id3Lib.Frames
             if (frame.Length - index < 3)
                 return;
 
-            _language = UTF8Encoding.UTF8.GetString(frame, index, 3);
+            _language = Encoding.UTF8.GetString(frame, index, 3);
             index += 3; // Three language bytes
 
             if (frame.Length - index < 1)
@@ -113,7 +113,7 @@ namespace Id3Lib.Frames
                 var language = TextBuilder.WriteASCII(_language);
                 if (language.Length != 3)
                 {
-                    writer.Write(new byte[] {(byte) 'e', (byte) 'n', (byte) 'g'});
+                    writer.Write(new[] {(byte) 'e', (byte) 'n', (byte) 'g'});
                 }
                 else
                 {
