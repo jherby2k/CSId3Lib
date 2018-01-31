@@ -207,6 +207,10 @@ namespace Id3Lib
                 // update the TagSize stored in the tagModel
                 frameModel.Header.TagSize = id3TagSize;
 
+                // If padding + tag size is too big, shrink the padding (rather than throwing an exception)
+                frameModel.Header.PaddingSize =
+                    Math.Min(frameModel.Header.PaddingSize, 0x10000000 - id3TagSize);
+
                 // next write the padding of zeros, if any
                 if (frameModel.Header.Padding)
                 {
