@@ -1,11 +1,13 @@
 ﻿// Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
     /// <summary>
     /// Helper class to get a description of the frame identifiers.
     /// </summary>
+    [PublicAPI]
     public static class FrameDescription
     {
         #region Fields

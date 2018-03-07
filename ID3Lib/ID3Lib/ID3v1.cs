@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
@@ -16,6 +17,7 @@ namespace Id3Lib
     /// The <b>ID3v1</b> class can read an ID3v1 frame form a mp3 file returning the <see cref="FrameModel"/> and
     /// write an ID3v1 form the FrameModel to a mp3 file, it will ignore any fields not supported in ID3v1 tag format.
     /// </remarks>
+    [PublicAPI]
     [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "ID", Justification = "It is the name of the standard"),
      SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "v")]
     public class ID3v1
