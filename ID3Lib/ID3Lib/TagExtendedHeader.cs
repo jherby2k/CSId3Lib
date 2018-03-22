@@ -1,8 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using Id3Lib.Exceptions;
 using System;
 using System.IO;
 using System.Text;
+using Id3Lib.Exceptions;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
@@ -14,53 +15,44 @@ namespace Id3Lib
     /// insight in the structure of the tag, but is not vital to the correct
     /// parsing of the tag information; hence the extended header is optional.
     /// </remarks>
+    [PublicAPI]
     public class TagExtendedHeader
 	{
-		#region Fields
-		private uint _size;
-		private byte[] _extendedHeader;
-		#endregion
+        [CanBeNull] byte[] _extendedHeader;
 
-		#region Properties
-		/// <summary>
-		/// Get the size of the extended header
-		/// </summary>
-		public uint Size
-		{
-			get{return _size;}
-		}
-		#endregion
+        /// <summary>
+        /// Get the size of the extended header
+        /// </summary>
+        public uint Size { get; private set; }
 
-		#region Methods
-		/// <summary>
-		/// Load the ID3 extended header from a stream
-		/// </summary>
-		/// <param name="stream">Binary stream containing a ID3 extended header</param>
-		public void Deserialize(Stream stream)
+        /// <summary>
+        /// Load the ID3 extended header from a stream
+        /// </summary>
+        /// <param name="stream">Binary stream containing a ID3 extended header</param>
+        public void Deserialize([NotNull] Stream stream)
 		{
             if (stream == null)
                 throw new ArgumentNullException("stream");
 
             using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
-                _size = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
-			if(_size < 6)
+                Size = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
+			if (Size < 6)
                 throw new InvalidFrameException("Corrupt id3 extended header.");
 			
 			// TODO: implement the extended header, copy for now since it's optional
-			_extendedHeader = new Byte[_size];
-			stream.Read(_extendedHeader,0,(int)_size);
+			_extendedHeader = new byte[Size];
+		    stream.Read(_extendedHeader, 0, (int) Size);
 		}
 
 		/// <summary>
 		/// Save the ID3 extended header from a stream
 		/// </summary>
 		/// <param name="stream">Binary stream containing a ID3 extended header</param>
-		public void Serialize(Stream stream)
+		public void Serialize([NotNull] Stream stream)
 		{
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
                 // TODO: implement the extended header, for now write the original header
                 writer.Write(_extendedHeader);
 		}
-		#endregion
 	}
 }

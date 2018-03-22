@@ -7,6 +7,3 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Id3Lib.Tests")]
-
-
-

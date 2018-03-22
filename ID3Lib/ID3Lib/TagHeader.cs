@@ -1,8 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using Id3Lib.Exceptions;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Id3Lib.Exceptions;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
@@ -13,69 +14,40 @@ namespace Id3Lib
     ///  The <b>Header</b> class manages the first part of the ID3v2 tag that is the first ten bytes
     ///  of the ID3v1 tag.
     /// </remarks>
+    [PublicAPI]
     public class TagHeader
     {
-        #region Fields
+        static readonly byte[] _id3 = { 0x49, 0x44, 0x33 }; //"ID3" tag
+        static readonly byte[] _3di = { 0x33, 0x44, 0x49 }; //"3DI" footer tag
 
-        private byte _id3Version = 4;
-        private byte _id3Revision /*= 0*/;
-        private byte _id3Flags /*= 0*/;
-        private uint _id3RawSize /*= 0*/;
-        private uint _paddingSize /*= 0*/;
-
-        private static readonly byte[] _id3 = { 0x49, 0x44, 0x33 }; //"ID3" tag
-        private static readonly byte[] _3di = { 0x33, 0x44, 0x49 }; //"3DI" footer tag
-
-        #endregion
-
-        #region Properties
+        byte _id3Flags;
+        uint _paddingSize;
 
         /// <summary>
         /// Get the size of the header only.
         /// </summary>
-        public static uint HeaderSize
-        {
-            get { return 10; } // ID3 Header size is fixed
-        }
+        public static uint HeaderSize => 10;
 
         /// <summary>
         /// Get or set ID3v2 major version number.
         /// </summary>
-        public byte Version
-        {
-            get { return _id3Version; }
-            set { _id3Version = value; }
-        }
+        public byte Version { get; set; } = 4;
+
         /// <summary>
         /// Get or set the ID3v2 revision number.
         /// </summary>
-        public byte Revision
-        {
-            get { return _id3Revision; }
-            set { _id3Revision = value; }
-        }
+        public byte Revision { get; set; }
+
         /// <summary>
         /// Get or set the ID3v2 frames size, i.e. the tag excluding header and footer.
         /// </summary>
-        public uint TagSize
-        {
-            get { return _id3RawSize; }
-            set { _id3RawSize = value; }
-        }
+        public uint TagSize { get; set; }
 
         /// <summary>
         /// Get the minimum complete ID3v2 tag size, 
         /// including header and footer but not including any padding.
         /// </summary>
-        public uint TagSizeWithHeaderFooter
-        {
-            get
-            {
-                return _id3RawSize                  // frame data
-                    + HeaderSize                    // the ID3v2 header
-                    + (Footer ? HeaderSize : 0);    // optional footer
-            }
-        }
+        public uint TagSizeWithHeaderFooter => TagSize + HeaderSize + (Footer ? HeaderSize : 0);
 
         /// <summary>
         /// Get or set if un-synchronisation is applied on all frames.
@@ -83,37 +55,39 @@ namespace Id3Lib
         [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Unsync")]
         public bool Unsync
         {
-            get { return (_id3Flags & 0x80) > 0; }
+            get => (_id3Flags & 0x80) > 0;
             set
             {
                 if (value)
-                {
                     _id3Flags |= 0x80;
-                }
                 else
-                {
-                    unchecked { _id3Flags &= (byte)~(0x80); }
-                }
+                    unchecked
+                    {
+                        _id3Flags &= (byte) ~0x80;
+                    }
             }
         }
+
         /// <summary>
         /// Get or set if the header is followed by an extended header.
         /// </summary>
         public bool ExtendedHeader
         {
-            get { return (_id3Flags & 0x40) > 0; }
+            get => (_id3Flags & 0x40) > 0;
             set
             {
                 if (value)
-                {
                     _id3Flags |= 0x40;
-                }
                 else
                 {
-                    unchecked { _id3Flags &= (byte)~(0x40); }
+                    unchecked
+                    {
+                        _id3Flags &= (byte) ~0x40;
+                    }
                 }
             }
         }
+
         /// <summary>
         /// Get or set if the tag is experimental stage.
         /// </summary>
@@ -122,19 +96,19 @@ namespace Id3Lib
         /// </remarks>
         public bool Experimental
         {
-            get { return (_id3Flags & 0x20) > 0; }
+            get => (_id3Flags & 0x20) > 0;
             set
             {
                 if (value)
-                {
                     _id3Flags |= 0x20;
-                }
                 else
-                {
-                    unchecked { _id3Flags &= (byte)~(0x20); }
-                }
+                    unchecked
+                    {
+                        _id3Flags &= (byte) ~0x20;
+                    }
             }
         }
+
         /// <summary>
         /// Get or set if a footer is present at the end of the tag.
         /// </summary>
@@ -143,10 +117,7 @@ namespace Id3Lib
         /// </remarks>
         public bool Footer
         {
-            get
-            {
-                return (_id3Flags & 0x10) > 0;
-            }
+            get => (_id3Flags & 0x10) > 0;
             set
             {
                 if (value)
@@ -155,9 +126,10 @@ namespace Id3Lib
                     _paddingSize = 0;
                 }
                 else
-                {
-                    unchecked { _id3Flags &= (byte)~(0x10); }
-                }
+                    unchecked
+                    {
+                        _id3Flags &= (byte) ~0x10;
+                    }
             }
         }
 
@@ -167,49 +139,36 @@ namespace Id3Lib
         /// <remarks>
         /// Can't be used simultaneously with the frame footer they are mutually exclusive.
         /// </remarks>
-        public bool Padding
-        {
-            get
-            {
-                return _paddingSize > 0;
-            }
-        }
+        public bool Padding => _paddingSize > 0;
 
         /// <summary>
         /// Get or set the padding size, and thus padding.
         /// </summary>
         public uint PaddingSize
         {
+            get => _paddingSize;
             set
             {
                 if (value > 0)
-                {
                     Footer = false;
-                }
                 _paddingSize = value;
             }
-            get
-            {
-                return _paddingSize;
-            }
         }
-        #endregion
 
-        #region Methods
         /// <summary>
         /// Save header into the stream.
         /// </summary>
         /// <param name="stream">Stream to save header</param>
-        public void Serialize(Stream stream)
+        public void Serialize([NotNull] Stream stream)
         {
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
             {
                 //TODO: Validate version and revision we support
-                writer.Write(_id3); // ID3v2/file identifier
-                writer.Write(_id3Version); // ID3v2 version, e.g. 3 or 4
-                writer.Write(_id3Revision); // ID3v2 revision, e.g. 0
+                writer.Write(_id3);      // ID3v2/file identifier
+                writer.Write(Version);   // ID3v2 version, e.g. 3 or 4
+                writer.Write(Revision);  // ID3v2 revision, e.g. 0
                 writer.Write(_id3Flags); // ID3v2 flags
-                writer.Write(Swap.UInt32(Sync.Safe(_id3RawSize + _paddingSize)));
+                writer.Write(Swap.UInt32(Sync.Safe(TagSize + _paddingSize)));
             }
         }
 
@@ -217,16 +176,16 @@ namespace Id3Lib
         /// Save corresponding footer into the stream.
         /// </summary>
         /// <param name="stream">Stream to save header</param>
-        public void SerializeFooter(Stream stream)
+        public void SerializeFooter([NotNull] Stream stream)
         {
-            using (BinaryWriter writer = new BinaryWriter(stream, Encoding.UTF8, true))
+            using (var writer = new BinaryWriter(stream, Encoding.UTF8, true))
             {
                 //TODO: Validate version and revision we support
-                writer.Write(_3di);         // ID3v2/file footer identifier; ID3 backwards.
-                writer.Write(_id3Version);  // ID3v2 version, e.g. 3 or 4
-                writer.Write(_id3Revision); // ID3v2 revision, e.g. 0
-                writer.Write(_id3Flags);    // ID3v2 flags
-                writer.Write(Swap.UInt32(Sync.Safe(_id3RawSize)));
+                writer.Write(_3di);      // ID3v2/file footer identifier; ID3 backwards.
+                writer.Write(Version);   // ID3v2 version, e.g. 3 or 4
+                writer.Write(Revision);  // ID3v2 revision, e.g. 0
+                writer.Write(_id3Flags); // ID3v2 flags
+                writer.Write(Swap.UInt32(Sync.Safe(TagSize)));
             }
         }
 
@@ -234,37 +193,34 @@ namespace Id3Lib
         /// Load header from the stream.
         /// </summary>
         /// <param name="stream">Stream to load header</param>
-        public void Deserialize(Stream stream)
+        public void Deserialize([NotNull] Stream stream)
         {
-            using (BinaryReader reader = new BinaryReader(stream, Encoding.UTF8, true))
+            using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
             {
-                byte[] idTag = new byte[3];
+                var idTag = new byte[3];
 
                 // Read the tag identifier
                 reader.Read(idTag, 0, 3);
-                if (Memory.Compare(_id3, idTag) == false)
+                if (!Memory.Compare(_id3, idTag))
                     throw new TagNotFoundException("ID3v2 tag identifier was not found");
 
                 // Get the id3v2 version byte
-                _id3Version = reader.ReadByte();
-                if (_id3Version == 0xff)
+                Version = reader.ReadByte();
+                if (Version == 0xff)
                     throw new InvalidTagException("Corrupt header, invalid ID3v2 version.");
 
                 // Get the id3v2 revision byte
-                _id3Revision = reader.ReadByte();
-                if (_id3Revision == 0xff)
+                Revision = reader.ReadByte();
+                if (Revision == 0xff)
                     throw new InvalidTagException("Corrupt header, invalid ID3v2 revision.");
 
                 // Get the id3v2 flag byte, only read what I understand
                 _id3Flags = (byte) (0xf0 & reader.ReadByte());
                 // Get the id3v2 size, swap and un-sync the integer
-                _id3RawSize = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
-                if (_id3RawSize == 0)
+                TagSize = Swap.UInt32(Sync.UnsafeBigEndian(reader.ReadUInt32()));
+                if (TagSize == 0)
                     throw new InvalidTagException("Corrupt header, tag size can't be zero.");
             }
-
         }
-        #endregion
-
     }
 }

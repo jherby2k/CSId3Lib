@@ -1,10 +1,11 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using Id3Lib.Frames;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using Id3Lib.Frames;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
@@ -16,40 +17,28 @@ namespace Id3Lib
     /// handles the tag header, an <see cref="ExtendedHeader"/> that it is optional and 
     /// stores the frames.
     /// </remarks>
+    [PublicAPI]
     [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Justification = "It is more than a collection as it has extra behaviour")]
     public class TagModel : Collection<FrameBase>
     {
-        #region Fields
-        private TagHeader _tagHeader = new TagHeader();
-        private TagExtendedHeader _tagExtendedHeader = new TagExtendedHeader();
-        #endregion
-
-        #region Properties
-
         /// <summary>
         /// id3v2 tags can not have "no frames"
         /// </summary>
-        public bool IsValid
-        {
-            get { return Count > 0; }
-        }
-        /// <summary>
-        /// Get or set the header.
-        /// </summary>
-        public TagHeader Header
-        {
-            get { return _tagHeader; }
-        }
+        public bool IsValid => Count > 0;
 
         /// <summary>
-        /// Get or set extended header.
+        /// Gets the header.
         /// </summary>
-        public TagExtendedHeader ExtendedHeader
-        {
-            get { return _tagExtendedHeader; }
-        }
+        [NotNull]
+        public TagHeader Header { get; } = new TagHeader();
 
-        protected override void InsertItem(int index, FrameBase item)
+        /// <summary>
+        /// Gets the extended header.
+        /// </summary>
+        [NotNull]
+        public TagExtendedHeader ExtendedHeader { get; } = new TagExtendedHeader();
+
+        protected override void InsertItem(int index, [NotNull] FrameBase item)
         {
             if (item == null)
                 throw new ArgumentNullException("item");
@@ -58,7 +47,7 @@ namespace Id3Lib
             base.InsertItem(index, item);
         }
 
-        protected override void SetItem(int index, FrameBase item)
+        protected override void SetItem(int index, [NotNull] FrameBase item)
         {
             if (item == null)
                 throw new ArgumentNullException("item");
@@ -71,7 +60,7 @@ namespace Id3Lib
         /// Add a range of frames
         /// </summary>
         /// <param name="frames">the frames to add</param>
-        public void AddRange(IEnumerable<FrameBase> frames)
+        public void AddRange([NotNull] IEnumerable<FrameBase> frames)
         {
             if (frames == null)
                 throw new ArgumentNullException("frames");
@@ -96,11 +85,7 @@ namespace Id3Lib
 
             // TODO: there must be a better way of obtaining this!!
             using (Stream stream = new MemoryStream())
-            {
                 TagManager.Serialize(this, stream);
-            }
         }
-
-        #endregion
     }
 }

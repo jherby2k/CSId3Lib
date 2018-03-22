@@ -1,9 +1,9 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using Id3Lib.Exceptions;
-using Id3Lib.Frames;
 using System;
 using System.IO;
 using System.Text;
+using Id3Lib.Exceptions;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
@@ -15,22 +15,23 @@ namespace Id3Lib
     /// to a <see cref="TagManager"/> that can be manipulated and saved later again to
     /// a binary form.
     /// </remarks>
+    [PublicAPI]
     public static class TagManager
     {
-        #region Methods
         /// <summary>
         /// Load the ID3v2 frames to a binary stream
         /// </summary>
         /// <param name="stream">Binary stream holding the ID3 Tag</param>
         /// <returns>Model keeping the ID3 Tag structure</returns>
-        public static TagModel Deserialize(Stream stream)
+        [NotNull]
+        public static TagModel Deserialize([NotNull] Stream stream)
         {
             var frameModel = new TagModel();
             frameModel.Header.Deserialize(stream); // load the ID3v2 header
             if (frameModel.Header.Version != 3 & frameModel.Header.Version != 4)
                 throw new NotImplementedException("ID3v2 Version " + frameModel.Header.Version + " is not supported.");
 
-            uint id3TagSize = frameModel.Header.TagSize;
+            var id3TagSize = frameModel.Header.TagSize;
 
             MemoryStream memory = null;
             try
@@ -43,6 +44,7 @@ namespace Id3Lib
                     if (id3TagSize <= 0)
                         throw new InvalidTagException("Data is missing after the header.");
                 }
+
                 uint rawSize;
                 // load the extended header
                 if (frameModel.Header.ExtendedHeader)
@@ -53,9 +55,7 @@ namespace Id3Lib
                         throw new InvalidTagException("Data is missing after the extended header.");
                 }
                 else
-                {
                     rawSize = id3TagSize;
-                }
 
                 // Read the frames
                 if (rawSize <= 0)
@@ -69,7 +69,7 @@ namespace Id3Lib
                 // we need to read a single byte to inspect for padding, then if not, read a whole tag.
                 while (index < rawSize)
                 {
-                    byte[] frameId = new byte[4];
+                    var frameId = new byte[4];
                     stream.Read(frameId, 0, 1);
                     if (frameId[0] == 0)
                     {
@@ -132,7 +132,7 @@ namespace Id3Lib
                                 //TODO: Validate key valid ranges
                     using (var reader = new BinaryReader(stream, Encoding.UTF8, true))
                     {
-                        uint frameSize = Swap.UInt32(reader.ReadUInt32());
+                        var frameSize = Swap.UInt32(reader.ReadUInt32());
                         index += 4; // have read 4 bytes
                         // ID3v2.4 now has sync-safe sizes
                         if (frameModel.Header.Version == 4)
@@ -143,9 +143,9 @@ namespace Id3Lib
                             throw new InvalidFrameException(
                                 "A frame is corrupt, it can't be larger than the available space remaining.");
 
-                        ushort flags = Swap.UInt16(reader.ReadUInt16());
+                        var flags = Swap.UInt16(reader.ReadUInt16());
                         index += 2; // read 2 bytes
-                        byte[] frameData = new byte[frameSize];
+                        var frameData = new byte[frameSize];
                         reader.Read(frameData, 0, (int) frameSize);
                         index += frameSize; // read more bytes
                         frameModel.Add(frameHelper.Build(Encoding.UTF8.GetString(frameId, 0, 4), flags, frameData));
@@ -164,7 +164,7 @@ namespace Id3Lib
         /// </summary>
         /// <param name="frameModel">Model keeping the ID3 Tag structure</param>
         /// <param name="stream">Stream keeping the ID3 Tag</param>
-        public static void Serialize(TagModel frameModel, Stream stream)
+        public static void Serialize([NotNull] TagModel frameModel, [NotNull] Stream stream)
         {
             if (frameModel.Count <= 0)
                 throw new InvalidTagException("Can't serialize a ID3v2 tag without any frames, there must be at least one present.");
@@ -173,16 +173,16 @@ namespace Id3Lib
             using (var writer = new BinaryWriter(memory, Encoding.UTF8, true))
             {
                 var frameHelper = new FrameHelper(frameModel.Header);
+
                 // Write the frames in binary format
-                foreach (FrameBase frame in frameModel)
+                foreach (var frame in frameModel)
                 {
                     //TODO: Do validations on tag name correctness
-                    byte[] frameId = new byte[4];
+                    var frameId = new byte[4];
                     Encoding.UTF8.GetBytes(frame.FrameId, 0, 4, frameId, 0);
                     writer.Write(frameId); // Write the 4 byte text tag
-                    ushort flags;
-                    byte[] buffer = frameHelper.Make(frame, out flags);
-                    uint frameSize = (uint) buffer.Length;
+                    var buffer = frameHelper.Make(frame, out var flags);
+                    var frameSize = (uint) buffer.Length;
 
                     if (frameModel.Header.Version == 4)
                         frameSize = Sync.Safe(frameSize);
@@ -192,7 +192,7 @@ namespace Id3Lib
                     writer.Write(buffer);
                 }
 
-                uint id3TagSize = (uint) memory.Position;
+                var id3TagSize = (uint) memory.Position;
 
                 // Skip the header 10 bytes for now, we will come back and write the Header
                 // with the correct size once have the tag size + padding
@@ -213,17 +213,15 @@ namespace Id3Lib
 
                 // next write the padding of zeros, if any
                 if (frameModel.Header.Padding)
-                {
-                    for (int i = 0; i < frameModel.Header.PaddingSize; i++)
+                    for (var i = 0; i < frameModel.Header.PaddingSize; i++)
                         stream.WriteByte(0);
-                }
 
                 // next write the footer, if any
                 if (frameModel.Header.Footer)
                     frameModel.Header.SerializeFooter(stream);
 
                 // Now seek back to the start and write the header
-                long position = stream.Position;
+                var position = stream.Position;
                 stream.Seek(0, SeekOrigin.Begin);
                 frameModel.Header.Serialize(stream);
 
@@ -231,6 +229,5 @@ namespace Id3Lib
                 stream.Position = position;
             }
         }
-        #endregion
     }
 }
