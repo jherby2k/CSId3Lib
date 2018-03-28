@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -12,42 +13,24 @@ namespace Id3Lib.Frames
     ///   This frame's purpose is to be able to identify the audio file in a
     ///   database, that may provide more information relevant to the content.
     /// </remarks>
+    [PublicAPI]
     [Frame("UFID")]
     public class FrameUniqueIdentifier : FrameBase, IFrameDescription
     {
-        #region Fields
-        private string _description;
-        private byte[] _identifer;
-        #endregion
+        [NotNull] byte[] _identifer;
 
-        #region Constructors
-        /// <summary>
-        /// Create a FrameGEOB frame.
-        /// </summary>
-        /// <param name="frameId">ID3v2 UFID frame</param>
-        public FrameUniqueIdentifier(string frameId)
-            : base(frameId)
-        {
-
-        }
-        #endregion
-
-        #region Properties
         /// <summary>
         /// Frame description
         /// </summary>
-        public string Description
-        {
-            get { return _description; }
-            set { _description = value; }
-        }
+        public string Description { get; set; }
 
         /// <summary>
         /// Binary representation of the object
         /// </summary>
+        [NotNull]
         public byte[] Identifier
         {
-            get { return _identifer; }
+            get => _identifer;
             set
             {
                 if (value.Length > 64)
@@ -55,17 +38,24 @@ namespace Id3Lib.Frames
                 _identifer = value;
             }
         }
-        #endregion
 
-        #region Methods
+        /// <summary>
+        /// Create a FrameGEOB frame.
+        /// </summary>
+        /// <param name="frameId">ID3v2 UFID frame</param>
+        public FrameUniqueIdentifier([NotNull] string frameId)
+            : base(frameId)
+        {
+        }
+
         /// <summary>
         /// Parse the binary UFID frame
         /// </summary>
         /// <param name="frame">binary frame</param>
         public override void Parse(byte[] frame)
         {
-            int index = 0;
-            _description = TextBuilder.ReadASCII(frame, ref index);
+            var index = 0;
+            Description = TextBuilder.ReadASCII(frame, ref index);
             _identifer = Memory.Extract(frame, index, frame.Length - index);
         }
 
@@ -75,10 +65,10 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write(TextBuilder.WriteASCII(_description));
+                writer.Write(TextBuilder.WriteASCII(Description));
                 writer.Write(_identifer);
                 return buffer.ToArray();
             }
@@ -88,10 +78,10 @@ namespace Id3Lib.Frames
         /// Unique Tag Identifier description 
         /// </summary>
         /// <returns></returns>
+        [NotNull]
         public override string ToString()
         {
-            return _description;
+            return Description;
         }
-        #endregion
     }
 }

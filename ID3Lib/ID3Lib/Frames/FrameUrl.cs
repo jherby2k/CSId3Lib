@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -11,48 +12,34 @@ namespace Id3Lib.Frames
     /// <remarks>
     /// URL               text string
     /// </remarks>
+    [PublicAPI]
     [Frame("W")]
     public class FrameUrl : FrameBase
     {
-        #region Fields
-        private Uri _uri;
-        #endregion
+        [CanBeNull] Uri _uri;
 
-        #region Constructors
+        /// <summary>
+        /// The URL page location
+        /// </summary>
+        [NotNull]
+        public string Url => _uri == null ? string.Empty : _uri.AbsoluteUri;
+
+        [CanBeNull]
+        public Uri Uri
+        {
+            get => _uri;
+            set => _uri = value ?? throw new ArgumentNullException("value");
+        }
+
         /// <summary>
         /// Create a URL frame
         /// </summary>
         /// <param name="frameId">Type of URL frame</param>
-        public FrameUrl(string frameId)
+        public FrameUrl([NotNull] string frameId)
             : base(frameId)
         {
         }
-        #endregion
 
-        #region Properties
-        /// <summary>
-        /// The URL page location
-        /// </summary>
-        public string Url
-        {
-            get { return _uri.AbsoluteUri; }
-        }
-
-        public Uri Uri
-        {
-            set
-            {
-                if (value == null)
-                    throw new ArgumentNullException("value");
-
-                _uri = value;
-            }
-
-            get { return _uri; }
-        }
-        #endregion
-
-        #region Methods
         /// <summary>
         /// Parse the binary frame
         /// </summary>
@@ -64,7 +51,7 @@ namespace Id3Lib.Frames
                 return;
 
             var url = TextBuilder.ReadTextEnd(frame, 0, TextCode.Ascii);
-            if (Uri.TryCreate(url, UriKind.Absolute, out _uri) == false)
+            if (!Uri.TryCreate(url, UriKind.Absolute, out _uri))
                 _uri = null;
         }
 
@@ -77,8 +64,7 @@ namespace Id3Lib.Frames
             using (var buffer = new MemoryStream())
             using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                var url = _uri != null ? _uri.AbsoluteUri : String.Empty;
-                writer.Write(TextBuilder.WriteTextEnd(url, TextCode.Ascii));
+                writer.Write(TextBuilder.WriteTextEnd(Url, TextCode.Ascii));
                 return buffer.ToArray();
             }
         }
@@ -86,10 +72,10 @@ namespace Id3Lib.Frames
         /// Default frame description
         /// </summary>
         /// <returns>URL text</returns>
+        [NotNull]
         public override string ToString()
         {
-            return _uri != null ? _uri.AbsoluteUri : String.Empty;
+            return Url;
         }
-        #endregion
     }
 }

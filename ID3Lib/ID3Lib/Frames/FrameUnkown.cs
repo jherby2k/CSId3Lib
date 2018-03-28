@@ -1,5 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 
+using JetBrains.Annotations;
+
 namespace Id3Lib.Frames
 {
     /// <summary>
@@ -9,24 +11,20 @@ namespace Id3Lib.Frames
     /// The <b>FrameUnknown</b> class handles unknown frames so they can be restored
     /// or discarded later.
     /// </remarks>
+    [PublicAPI]
     public class FrameUnknown : FrameBase
 	{
-		#region Fields
-		private byte[] _data;
-		#endregion
+	    [NotNull] byte[] _data;
 
-		#region Constructors
 		/// <summary>
 		/// Create an unknown frame object.
 		/// </summary>
         /// <param name="frameId">ID3v2 type of unknown frame</param>
-        internal FrameUnknown( string frameId )
+        internal FrameUnknown([NotNull] string frameId)
             : base(frameId)
 		{
 		}
-		#endregion
 
-		#region Methods
 		/// <summary>
 		/// Set the binary frame
 		/// </summary>
@@ -44,14 +42,15 @@ namespace Id3Lib.Frames
 		{
 			return _data;
 		}
+
 		/// <summary>
 		/// Default Frame description
 		/// </summary>
         /// <returns>Unknown ID3 frameId</returns>
+		[NotNull]
 		public override string ToString()
 		{
             return "Unknown ID3 frameId";
 		}
-		#endregion
 	}
 }

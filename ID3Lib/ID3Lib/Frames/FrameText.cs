@@ -1,6 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -15,57 +16,40 @@ namespace Id3Lib.Frames
     /// Text encoding        $xx
     /// Information          text string(s) according to encoding
     /// </remarks>
+    [PublicAPI]
     [Frame("T")]
     public class FrameText : FrameBase
     {
-        #region Fields
-        private string _text;
-        private TextCode _textEncoding;
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Create a FrameText frame.
-        /// </summary>
-        /// <param name="frameId">ID3v2 type of text frame</param>
-        public FrameText(string frameId)
-            : base(frameId)
-        {
-            _textEncoding = TextCode.Ascii;
-        }
-        #endregion
-
-        #region Properties
         /// <summary>
         /// Get or set the type of text encoding, the frame is using.
         /// </summary>
-        public TextCode TextCode
-        {
-            get { return _textEncoding; }
-            set { _textEncoding = value; }
-        }
+        public TextCode TextCode { get; set; } = TextCode.Ascii;
 
         /// <summary>
         /// Get or Set the text of the frame
         /// </summary>
-        public string Text
-        {
-            get { return _text; }
-            set { _text = value; }
-        }
-        #endregion
+        [NotNull]
+        public string Text { get; set; }
 
-        #region Methods
+        /// <summary>
+        /// Create a FrameText frame.
+        /// </summary>
+        /// <param name="frameId">ID3v2 type of text frame</param>
+        public FrameText([NotNull] string frameId)
+            : base(frameId)
+        {
+        }
+
         /// <summary>
         /// Parse the text binary frame.
         /// </summary>
         /// <param name="frame">binary frame</param>
         public override void Parse(byte[] frame)
         {
-            int index = 0;
-            _textEncoding = (TextCode)frame[index];
+            var index = 0;
+            TextCode = (TextCode) frame[index++];
             index++;
-            _text = TextBuilder.ReadTextEnd(frame, index, _textEncoding);
+            Text = TextBuilder.ReadTextEnd(frame, index, TextCode);
         }
 
         /// <summary>
@@ -74,11 +58,11 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte) _textEncoding);
-                writer.Write(TextBuilder.WriteTextEnd(_text, _textEncoding));
+                writer.Write((byte) TextCode);
+                writer.Write(TextBuilder.WriteTextEnd(Text, TextCode));
                 return buffer.ToArray();
             }
         }
@@ -87,10 +71,10 @@ namespace Id3Lib.Frames
         /// Default Frame description.
         /// </summary>
         /// <returns>Text of the frame</returns>
+        [NotNull]
         public override string ToString()
         {
-            return _text;
+            return Text;
         }
-        #endregion
     }
 }

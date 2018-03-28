@@ -1,22 +1,17 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using Id3Lib.Exceptions;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Id3Lib.Exceptions;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
-
     /// <summary>
     /// Abstract base frame that provides common functionality to all the frames.
     /// </summary>
+    [PublicAPI]
     public abstract class FrameBase
     {
-        #region Fields
-        private string _frameId;
-        private byte? _group;
-        #endregion
-
-        #region Properties
         /// <summary>
         /// Get or set the tag alter flag</summary>
         /// <remarks>
@@ -79,47 +74,35 @@ namespace Id3Lib.Frames
         /// <summary>
         /// Get or set the group, if undefined there is no grouping enabled. 
         /// </summary> 
-        public byte? Group
-        {
-            get { return _group; }
-            set { _group = value; }
-        }
+        public byte? Group { get; set; }
 
         /// <summary>
         /// ID3 Frame Id frame type
         /// </summary>
-        public string FrameId
-        {
-            get { return _frameId; }
-        }
-        #endregion
+        [NotNull]
+        public string FrameId { get; }
 
-        #region Constructor
-        internal FrameBase(string frameId)
+        internal FrameBase([NotNull] string frameId)
         {
             if (frameId == null)
                 throw new ArgumentNullException("frameId");
 
             if (frameId.Length != 4)
-                throw new InvalidTagException("Invalid frame type: '" + frameId + "', it must be 4 characters long.");
+                throw new InvalidTagException($"Invalid frame type: '{frameId}', it must be 4 characters long.");
 
-            _frameId = frameId;
+            FrameId = frameId;
         }
-        #endregion
-
-
-        #region Methods
 
         /// <summary>
-        /// Load frame form binary data
+        /// Load frame from binary data
         /// </summary>
         /// <param name="frame">binary frame representation</param>
-        public abstract void Parse(byte[] frame);
+        public abstract void Parse([NotNull] byte[] frame);
+
         /// <summary>
         /// Save frame to binary data
         /// </summary>
         /// <returns>binary frame representation</returns>
-        public abstract byte[] Make();
-        #endregion
+        [NotNull] public abstract byte[] Make();
     }
 }

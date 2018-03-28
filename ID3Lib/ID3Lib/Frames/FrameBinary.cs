@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -12,68 +13,44 @@ namespace Id3Lib.Frames
     /// The <b>FrameBinary</b> class handles GEOB ID3v2 frame types that can hold any type of file
     /// or binary data encapsulated.
     /// </remarks>
+    [PublicAPI]
     [Frame("GEOB")]
     public class FrameBinary : FrameBase, IFrameDescription
     {
-        #region Fields
-        private TextCode _textEncoding;
-        private string _mime;
-        private string _fileName;
-        private string _description;
-        private byte[] _objectData;
-        #endregion
+        string _fileName;
 
-        #region Constructors
-        /// <summary>
-        /// Create a FrameGEOB frame.
-        /// </summary>
-        /// <param name="frameId">ID3v2 GEOB frame</param>
-        public FrameBinary(string frameId)
-            : base(frameId)
-        {
-            _textEncoding = TextCode.Ascii;
-        }
-        #endregion
-
-        #region Properties
         /// <summary>
         /// Type of text encoding
         /// </summary>
-        public TextCode TextEncoding
-        {
-            get { return _textEncoding; }
-            set { _textEncoding = value; }
-        }
+        public TextCode TextEncoding { get; set; }
 
         /// <summary>
         /// Text MIME type
         /// </summary>
-        public string Mime
-        {
-            get { return _mime; }
-            set { _mime = value; }
-        }
+        [NotNull]
+        public string Mime { get; set; }
 
         /// <summary>
         /// Frame description
         /// </summary>
-        public string Description
-        {
-            get { return _description; }
-            set { _description = value; }
-        }
+        public string Description { get; set; }
 
         /// <summary>
         /// Binary representation of the object
         /// </summary>
-        public byte[] ObjectData
-        {
-            get { return _objectData; }
-            set { _objectData = value; }
-        }
-        #endregion
+        [NotNull]
+        public byte[] ObjectData { get; set; }
 
-        #region Methods
+        /// <summary>
+        /// Create a FrameGEOB frame.
+        /// </summary>
+        /// <param name="frameId">ID3v2 GEOB frame</param>
+        public FrameBinary([NotNull] string frameId)
+            : base(frameId)
+        {
+            TextEncoding = TextCode.Ascii;
+        }
+
         /// <summary>
         /// Parse the binary GEOB frame
         /// </summary>
@@ -83,13 +60,12 @@ namespace Id3Lib.Frames
             if (frame == null)
                 throw new ArgumentNullException("frame");
 
-            int index = 0;
-            _textEncoding = (TextCode)frame[index];
-            index++;
-            _mime = TextBuilder.ReadASCII(frame, ref index);
-            _fileName = TextBuilder.ReadText(frame, ref index, _textEncoding);
-            _description = TextBuilder.ReadText(frame, ref index, _textEncoding);
-            _objectData = Memory.Extract(frame, index, frame.Length - index);
+            var index = 0;
+            TextEncoding = (TextCode) frame[index++];
+            Mime = TextBuilder.ReadASCII(frame, ref index);
+            _fileName = TextBuilder.ReadText(frame, ref index, TextEncoding);
+            Description = TextBuilder.ReadText(frame, ref index, TextEncoding);
+            ObjectData = Memory.Extract(frame, index, frame.Length - index);
         }
 
         /// <summary>
@@ -98,14 +74,14 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte) _textEncoding);
-                writer.Write(TextBuilder.WriteASCII(_mime));
-                writer.Write(TextBuilder.WriteText(_fileName, _textEncoding));
-                writer.Write(TextBuilder.WriteText(_description, _textEncoding));
-                writer.Write(_objectData);
+                writer.Write((byte) TextEncoding);
+                writer.Write(TextBuilder.WriteASCII(Mime));
+                writer.Write(TextBuilder.WriteText(_fileName, TextEncoding));
+                writer.Write(TextBuilder.WriteText(Description, TextEncoding));
+                writer.Write(ObjectData);
                 return buffer.ToArray();
             }
         }
@@ -114,10 +90,10 @@ namespace Id3Lib.Frames
         /// GEOB frame description 
         /// </summary>
         /// <returns></returns>
+        [NotNull]
         public override string ToString()
         {
-            return _description;
+            return Description;
         }
-        #endregion
     }
 }

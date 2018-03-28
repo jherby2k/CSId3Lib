@@ -1,6 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -11,46 +12,37 @@ namespace Id3Lib.Frames
     ///   This frame's purpose is to be able to identify the audio file in a
     ///   database, that may provide more information relevant to the content.
     /// </remarks>
+    [PublicAPI]
     [Frame("PCNT")]
     public class FramePlayCounter : FrameBase
     {
-        #region Fields
-        private byte[] _counter = new byte[] { 0 };
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Create a Play Counter frame.
-        /// </summary>
-        /// <param name="frameId">ID3v2 PCNT frame</param>
-        public FramePlayCounter(string frameId)
-            : base(frameId)
-        {
-
-        }
-        #endregion
-
-        #region Properties
+        [NotNull] byte[] _counter = { 0 };
 
         /// <summary>
         /// Get the number of times the song has been played
         /// </summary>
         public ulong Counter
         {
-            get { return Memory.ToInt64(_counter); }
-            set { _counter = Memory.GetBytes(value); }
+            get => Memory.ToInt64(_counter);
+            set => _counter = Memory.GetBytes(value);
         }
-        #endregion
 
-        #region Methods
+        /// <summary>
+        /// Create a Play Counter frame.
+        /// </summary>
+        /// <param name="frameId">ID3v2 PCNT frame</param>
+        public FramePlayCounter([NotNull] string frameId)
+            : base(frameId)
+        {
+        }
+
         /// <summary>
         /// Parse the binary PCNT frame
         /// </summary>
         /// <param name="frame">binary frame</param>
         public override void Parse(byte[] frame)
         {
-            int index = 0;
-            _counter = Memory.Extract(frame, index, frame.Length - index);
+            _counter = Memory.Extract(frame, 0, frame.Length);
         }
 
         /// <summary>
@@ -59,8 +51,8 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
                 writer.Write(_counter);
                 return buffer.ToArray();
@@ -71,10 +63,10 @@ namespace Id3Lib.Frames
         /// Unique Tag Identifer description 
         /// </summary>
         /// <returns></returns>
+        [NotNull]
         public override string ToString()
         {
-            return null;
+            return string.Empty;
         }
-        #endregion
     }
 }

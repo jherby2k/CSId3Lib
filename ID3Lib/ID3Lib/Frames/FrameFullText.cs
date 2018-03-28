@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -14,64 +15,41 @@ namespace Id3Lib.Frames
     /// Content descriptor   text string according to encoding, $00 (00)
     /// Lyrics/text          full text string according to encoding
     /// </remarks>
+    [PublicAPI]
     [Frame("USLT"), Frame("COMM")]
     public class FrameFullText : FrameBase, IFrameDescription
     {
-        #region Fields
-        private string _contents;
-        private string _text;
-        private string _language = "eng";
-        private TextCode _textEncoding;
-        #endregion
+        /// <summary>
+        /// Get or set the type of text encoding the frame is using.
+        /// </summary>
+        public TextCode TextCode { get; set; } = TextCode.Ascii;
 
-        #region Constructors
+        /// <summary>
+        /// Get or set the description of the frame contents.
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
+        /// Get or set the main text data.
+        /// </summary>
+        [NotNull]
+        public string Text { get; set; }
+
+        /// <summary>
+        /// Get or set the Language the main text uses.
+        /// </summary>
+        [NotNull]
+        public string Language { get; set; } = "eng";
+
         /// <summary>
         /// Create a FrameLCText frame.
         /// </summary>
         /// <param name="frameId">ID3v2 type of text frame</param>
-        public FrameFullText(string frameId)
+        public FrameFullText([NotNull] string frameId)
             : base(frameId)
         {
-            _textEncoding = TextCode.Ascii;
         }
-        #endregion
 
-        #region Properties
-        /// <summary>
-        /// Get or set the type of text encoding the frame is using.
-        /// </summary>
-        public TextCode TextCode
-        {
-            get { return _textEncoding; }
-            set { _textEncoding = value; }
-        }
-        /// <summary>
-        /// Get or set the description of the frame contents.
-        /// </summary>
-        public string Description
-        {
-            get { return _contents; }
-            set { _contents = value; }
-        }
-        /// <summary>
-        /// Get or set the main text data.
-        /// </summary>
-        public string Text
-        {
-            get { return _text; }
-            set { _text = value; }
-        }
-        /// <summary>
-        /// Get or set the Language the main text uses.
-        /// </summary>
-        public string Language
-        {
-            get { return _language; }
-            set { _language = value; }
-        }
-        #endregion
-
-        #region Methods
         /// <summary>
         /// Parse binary data unsynchronised lyrics/comment frame.
         /// </summary>
@@ -81,22 +59,22 @@ namespace Id3Lib.Frames
             if (frame == null)
                 throw new ArgumentNullException("frame");
 
-            int index = 0;
-            _textEncoding = (TextCode)frame[index];
+            var index = 0;
+            TextCode = (TextCode) frame[index];
             index++;
 
             //TODO: Invalid tag, may be legacy.
             if (frame.Length - index < 3)
                 return;
 
-            _language = Encoding.UTF8.GetString(frame, index, 3);
+            Language = Encoding.UTF8.GetString(frame, index, 3);
             index += 3; // Three language bytes
 
             if (frame.Length - index < 1)
                 return;
 
-            _contents = TextBuilder.ReadText(frame, ref index, _textEncoding);
-            _text = TextBuilder.ReadTextEnd(frame, index, _textEncoding);
+            Description = TextBuilder.ReadText(frame, ref index, TextCode);
+            Text = TextBuilder.ReadTextEnd(frame, index, TextCode);
         }
 
         /// <summary>
@@ -108,19 +86,15 @@ namespace Id3Lib.Frames
             using (var buffer = new MemoryStream())
             using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte) _textEncoding);
+                writer.Write((byte) TextCode);
                 //TODO: Validate language field
-                var language = TextBuilder.WriteASCII(_language);
+                var language = TextBuilder.WriteASCII(Language);
                 if (language.Length != 3)
-                {
                     writer.Write(new[] {(byte) 'e', (byte) 'n', (byte) 'g'});
-                }
                 else
-                {
                     writer.Write(language, 0, 3);
-                }
-                writer.Write(TextBuilder.WriteText(_contents, _textEncoding));
-                writer.Write(TextBuilder.WriteTextEnd(_text, _textEncoding));
+                writer.Write(TextBuilder.WriteText(Description, TextCode));
+                writer.Write(TextBuilder.WriteTextEnd(Text, TextCode));
                 return buffer.ToArray();
             }
         }
@@ -129,10 +103,10 @@ namespace Id3Lib.Frames
         /// Default frame description.
         /// </summary>
         /// <returns>unsynchronised lyrics/comment text</returns>
+        [NotNull]
         public override string ToString()
         {
-            return _text;
+            return Text;
         }
-        #endregion
     }
 }

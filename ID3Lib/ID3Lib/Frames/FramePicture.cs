@@ -1,13 +1,13 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using SixLabors.ImageSharp;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
+using SixLabors.ImageSharp;
 
 namespace Id3Lib.Frames
 {
-    #region Enums
     /// <summary>
     /// Types of images
     /// (technically you can have a picture of each type in a single file)
@@ -100,100 +100,65 @@ namespace Id3Lib.Frames
         /// </summary>
         StudioLogo = 0x14,
     };
-    #endregion
 
     /// <summary>
     /// Picture Frame
     /// </summary>
+    [PublicAPI]
     [Frame("APIC")]
     public class FramePicture : FrameBase, IFrameDescription
     {
-        #region Fields
-        private TextCode _textEncoding;
-        private string _mime;
-        private PictureTypeCode _pictureType;
-        private string _description;
-        private byte[] _pictureData;
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Picture Frame
-        /// </summary>
-        public FramePicture(string frameId)
-            : base(frameId)
-        {
-            _textEncoding = TextCode.Ascii;
-        }
-        #endregion
-
-        #region Properties
         /// <summary>
         /// Type of text encoding
         /// </summary>
-        public TextCode TextEncoding
-        {
-            get { return _textEncoding; }
-            set { _textEncoding = value; }
-        }
+        public TextCode TextEncoding { get; set; } = TextCode.Ascii;
 
         /// <summary>
         /// Picture MIME type
         /// </summary>
-        public string Mime
-        {
-            get { return _mime; }
-            set { _mime = value; }
-        }
+        [NotNull]
+        public string Mime { get; set; }
 
         /// <summary>
         /// Description of the picture
         /// </summary>
-        public PictureTypeCode PictureType
-        {
-            get { return _pictureType; }
-            set { _pictureType = value; }
-        }
+        public PictureTypeCode PictureType { get; set; }
 
         /// <summary>
         /// Description of the picture
         /// </summary>
-        public string Description
-        {
-            get { return _description; }
-            set { _description = value; }
-        }
+        public string Description { get; set; }
+
         /// <summary>
         /// Binary data representing the picture
         /// </summary>
-        public byte[] PictureData
-        {
-            get { return _pictureData; }
-            set { _pictureData = value; }
-        }
+        [NotNull]
+        public byte[] PictureData { get; set; }
 
         /// <summary>
         /// Image of the picture
         /// </summary>
+        [NotNull]
         public Image<Rgba32> Picture
         {
-            get
-            {
-                return Image.Load(new MemoryStream(_pictureData, false));
-            }
+            get => Image.Load(new MemoryStream(PictureData, false));
             set
             {
                 if(value == null)
                     throw new ArgumentNullException("value");
 
-                _pictureData = value.SavePixelData();
-                _mime = Image.DetectFormat(_pictureData).DefaultMimeType;
+                PictureData = value.SavePixelData();
+                Mime = Image.DetectFormat(PictureData).DefaultMimeType;
             }
         }
 
-        #endregion
-
-        #region Methods
+        /// <summary>
+        /// Picture Frame
+        /// </summary>
+        public FramePicture([NotNull] string frameId)
+            : base(frameId)
+        {
+        }
 
         /// <summary>
         /// Load from binary data a picture frame
@@ -201,29 +166,28 @@ namespace Id3Lib.Frames
         /// <param name="frame">picture binary representation</param>
         public override void Parse(byte[] frame)
         {
-            int index = 0;
-            _textEncoding = (TextCode)frame[index];
-            index++;
-            _mime = TextBuilder.ReadASCII(frame, ref index);
-            _pictureType = (PictureTypeCode)frame[index];
-            index++;
-            _description = TextBuilder.ReadText(frame, ref index, _textEncoding);
-            _pictureData = Memory.Extract(frame, index, frame.Length - index);
+            var index = 0;
+            TextEncoding = (TextCode) frame[index++];
+            Mime = TextBuilder.ReadASCII(frame, ref index);
+            PictureType = (PictureTypeCode) frame[index++];
+            Description = TextBuilder.ReadText(frame, ref index, TextEncoding);
+            PictureData = Memory.Extract(frame, index, frame.Length - index);
         }
+
         /// <summary>
         ///  Save picture frame to binary data
         /// </summary>
         /// <returns>picture binary representation</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
+            using (var buffer = new MemoryStream())
             using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte) _textEncoding);
-                writer.Write(TextBuilder.WriteASCII(_mime));
-                writer.Write((byte) _pictureType);
-                writer.Write(TextBuilder.WriteText(_description, _textEncoding));
-                writer.Write(_pictureData);
+                writer.Write((byte) TextEncoding);
+                writer.Write(TextBuilder.WriteASCII(Mime));
+                writer.Write((byte) PictureType);
+                writer.Write(TextBuilder.WriteText(Description, TextEncoding));
+                writer.Write(PictureData);
                 return buffer.ToArray();
             }
         }
@@ -232,10 +196,10 @@ namespace Id3Lib.Frames
         /// Get a description of the picture frame
         /// </summary>
         /// <returns>Picture description</returns>
+        [NotNull]
         public override string ToString()
         {
-            return _description;
+            return Description;
         }
-        #endregion
     }
 }

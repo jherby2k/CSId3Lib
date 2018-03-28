@@ -1,6 +1,7 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -12,57 +13,35 @@ namespace Id3Lib.Frames
     /// Description       text string according to encoding, $00 (00)
     /// URL               text string
     /// </remarks>
+    [PublicAPI]
     [Frame("WXXX")]
     public class FrameUrlUserDef : FrameBase, IFrameDescription
     {
-        #region Fields
-        private TextCode _textEncoding;
-        private string _contents;
-        private string _url;
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Create a URL frame
-        /// </summary>
-        /// <param name="frameId">Type of URL frame</param>
-        public FrameUrlUserDef(string frameId)
-            : base(frameId)
-        {
-            _textEncoding = TextCode.Ascii;
-        }
-        #endregion
-
-        #region Properties
         /// <summary>
         /// Type of text encoding the frame is using
         /// </summary>
-        public TextCode TextCode
-        {
-            get { return _textEncoding; }
-            set { _textEncoding = value; }
-        }
+        public TextCode TextCode { get; set; } = TextCode.Ascii;
 
         /// <summary>
         /// Description of the frame contents
         /// </summary>
-        public string Description
-        {
-            get { return _contents; }
-            set { _contents = value; }
-        }
+        public string Description { get; set; }
 
         /// <summary>
         /// The URL page location
         /// </summary>
-        public string URL
-        {
-            get { return _url; }
-            set { _url = value; }
-        }
-        #endregion
+        [NotNull]
+        public string URL { get; set; }
 
-        #region Methods
+        /// <summary>
+        /// Create a URL frame
+        /// </summary>
+        /// <param name="frameId">Type of URL frame</param>
+        public FrameUrlUserDef([NotNull] string frameId)
+            : base(frameId)
+        {
+        }
+
         /// <summary>
         /// Parse the binary frame
         /// </summary>
@@ -73,11 +52,10 @@ namespace Id3Lib.Frames
             if (frame.Length < 1)
                 return;
 
-            int index = 0;
-            _textEncoding = (TextCode)frame[index];
-            index++;
-            _contents = TextBuilder.ReadText(frame, ref index, _textEncoding);
-            _url = TextBuilder.ReadTextEnd(frame, index, _textEncoding);
+            var index = 0;
+            TextCode = (TextCode)frame[index++];
+            Description = TextBuilder.ReadText(frame, ref index, TextCode);
+            URL = TextBuilder.ReadTextEnd(frame, index, TextCode);
         }
 
         /// <summary>
@@ -86,23 +64,24 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write((byte) _textEncoding);
-                writer.Write(TextBuilder.WriteText(_contents, _textEncoding));
-                writer.Write(TextBuilder.WriteTextEnd(_url, _textEncoding));
+                writer.Write((byte) TextCode);
+                writer.Write(TextBuilder.WriteText(Description, TextCode));
+                writer.Write(TextBuilder.WriteTextEnd(URL, TextCode));
                 return buffer.ToArray();
             }
         }
+
         /// <summary>
         /// Default frame description
         /// </summary>
         /// <returns>URL text</returns>
+        [NotNull]
         public override string ToString()
         {
-            return _url;
+            return URL;
         }
-        #endregion
     }
 }

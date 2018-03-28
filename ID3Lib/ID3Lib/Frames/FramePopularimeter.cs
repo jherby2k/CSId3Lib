@@ -2,6 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Frames
 {
@@ -11,68 +12,50 @@ namespace Id3Lib.Frames
     /// <remarks>
     ///   The purpose of this frame is to specify how good an audio file is.
     /// </remarks>
+    [PublicAPI]
     [SuppressMessage("Microsoft.Naming", "CA1704:IdentifiersShouldBeSpelledCorrectly", MessageId = "Popularimeter")]
     [Frame("POPM")]
     public class FramePopularimeter : FrameBase, IFrameDescription
     {
-        #region Fields
-        private string _description;
-        byte _rating;
-        private byte[] _counter = new byte[] { 0 };
-        #endregion
+        [NotNull] byte[] _counter = { 0 };
 
-        #region Constructors
-        /// <summary>
-        /// Create a Play Counter frame.
-        /// </summary>
-        /// <param name="frameId">ID3v2 POPM frame</param>
-        public FramePopularimeter(string frameId)
-            : base(frameId)
-        {
-
-        }
-        #endregion
-
-        #region Properties
         /// <summary>
         /// The rating is 1-255 where 1 is worst and 255 is best. 0 is unknown.
         /// </summary>
-        public byte Rating
-        {
-            get { return _rating; }
-            set { _rating = value; }
-        }
+        public byte Rating { get; set; }
 
         /// <summary>
         /// Email address
         /// </summary>
-        public string Description
-        {
-            get { return _description; }
-            set { _description = value; }
-        }
+        public string Description { get; set; }
 
         /// <summary>
         /// Get the number of times the song has been played
         /// </summary>
         public ulong Counter
         {
-            get { return Memory.ToInt64(_counter); }
-            set { _counter = Memory.GetBytes(value); }
+            get => Memory.ToInt64(_counter);
+            set => _counter = Memory.GetBytes(value);
         }
-        #endregion
 
-        #region Methods
+        /// <summary>
+        /// Create a Play Counter frame.
+        /// </summary>
+        /// <param name="frameId">ID3v2 POPM frame</param>
+        public FramePopularimeter([NotNull] string frameId)
+            : base(frameId)
+        {
+        }
+
         /// <summary>
         /// Parse the binary POPM frame
         /// </summary>
         /// <param name="frame">binary frame</param>
         public override void Parse(byte[] frame)
         {
-            int index = 0;
-            _description = TextBuilder.ReadASCII(frame, ref index);
-            _rating = frame[index];
-            index++;
+            var index = 0;
+            Description = TextBuilder.ReadASCII(frame, ref index);
+            Rating = frame[index++];
             _counter = Memory.Extract(frame, index, frame.Length - index);
         }
 
@@ -82,11 +65,11 @@ namespace Id3Lib.Frames
         /// <returns>binary frame</returns>
         public override byte[] Make()
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                writer.Write(TextBuilder.WriteASCII(_description));
-                writer.Write(_rating);
+                writer.Write(TextBuilder.WriteASCII(Description));
+                writer.Write(Rating);
                 writer.Write(_counter);
                 return buffer.ToArray();
             }
@@ -96,10 +79,10 @@ namespace Id3Lib.Frames
         /// Unique Tag Identifer description 
         /// </summary>
         /// <returns></returns>
+        [NotNull]
         public override string ToString()
         {
-            return null;
+            return string.Empty;
         }
-        #endregion
     }
 }
