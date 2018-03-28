@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>0.7.1-beta</Version>
     <Description>A managed library for reading and writing ID3 tags (versions 1, 2.3 and 2.4). This a fork of Hugo Rumayor's project located at https://sourceforge.net/projects/csid3lib, migrated to .NET Standard 2.0.</Description>

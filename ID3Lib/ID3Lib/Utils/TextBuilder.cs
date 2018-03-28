@@ -1,13 +1,12 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using Id3Lib.Exceptions;
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
+using Id3Lib.Exceptions;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
-    #region Global Fields
     /// <summary>
     /// Type of text used in frame
     /// </summary>
@@ -30,73 +29,54 @@ namespace Id3Lib
         /// Encoded Unicode
         /// </summary>
         Utf8 = 0x03
-    };
-    #endregion
+    }
 
     /// <summary>
     /// Manages binary to text and vice versa format conversions.
     /// </summary>
-    internal static class TextBuilder
+    static class TextBuilder
     {
-        #region Methods
-        public static string ReadText(byte[] frame, ref int index, TextCode code)
+        [NotNull]
+        internal static string ReadText([NotNull] byte[] frame, ref int index, TextCode code)
         {
             switch (code)
             {
                 case TextCode.Ascii:
-                    {
-                        return ReadASCII(frame, ref index);
-                    }
+                    return ReadASCII(frame, ref index);
                 case TextCode.Utf16:
-                    {
-                        return ReadUTF16(frame, ref index);
-                    }
+                    return ReadUTF16(frame, ref index);
                 case TextCode.Utf16BE:
-                    {
-                        return ReadUTF16BE(frame, ref index);
-                    }
+                    return ReadUTF16BE(frame, ref index);
                 case TextCode.Utf8:
-                    {
-                        return ReadUTF8(frame, ref index);
-                    }
+                    return ReadUTF8(frame, ref index);
                 default:
-                    {
-                        throw new InvalidFrameException("Invalid text code string type.");
-                    }
+                    throw new InvalidFrameException("Invalid text code string type.");
             }
         }
 
-        public static string ReadTextEnd(byte[] frame, int index, TextCode code)
+        [Pure, NotNull]
+        internal static string ReadTextEnd([NotNull] byte[] frame, int index, TextCode code)
         {
             switch (code)
             {
                 case TextCode.Ascii:
-                    {
                         return ReadASCIIEnd(frame, index);
-                    }
                 case TextCode.Utf16:
-                    {
                         return ReadUTF16End(frame, index);
-                    }
                 case TextCode.Utf16BE:
-                    {
                         return ReadUTF16BEEnd(frame, index);
-                    }
                 case TextCode.Utf8:
-                    {
                         return ReadUTF8End(frame, index);
-                    }
                 default:
-                    {
                         throw new InvalidFrameException("Invalid text code string type.");
-                    }
             }
         }
 
-        public static string ReadASCII(byte[] frame, ref int index)
+        [NotNull]
+        internal static string ReadASCII([NotNull] byte[] frame, ref int index)
         {
-            string text = null;
-            int count = Memory.FindByte(frame, 0, index);
+            var text = string.Empty;
+            var count = Memory.FindByte(frame, 0, index);
             if (count == -1)
                 throw new InvalidFrameException("Invalid ASCII string size");
 
@@ -106,11 +86,67 @@ namespace Id3Lib
                 text = encoding.GetString(frame, index, count);
                 index += count; // add the read bytes
             }
+
             index++; // jump an end of line byte
             return text;
         }
 
-        public static string ReadUTF16(byte[] frame, ref int index)
+        [Pure, NotNull]
+        internal static byte[] WriteText([NotNull] string text, TextCode code)
+        {
+            switch (code)
+            {
+                case TextCode.Ascii:
+                    return WriteASCII(text);
+                case TextCode.Utf16:
+                    return WriteUTF16(text);
+                case TextCode.Utf16BE:
+                    return WriteUTF16BE(text);
+                case TextCode.Utf8:
+                    return WriteUTF8(text);
+                default:
+                    throw new InvalidFrameException("Invalid text code string type.");
+            }
+        }
+
+        [Pure, NotNull]
+        internal static byte[] WriteTextEnd([NotNull] string text, TextCode code)
+        {
+            switch (code)
+            {
+                case TextCode.Ascii:
+                    return WriteASCIIEnd(text);
+                case TextCode.Utf16:
+                    return WriteUTF16End(text);
+                case TextCode.Utf16BE:
+                    return WriteUTF16BEEnd(text);
+                case TextCode.Utf8:
+                    return WriteUTF8End(text);
+                default:
+                    throw new InvalidFrameException("Invalid text code string type.");
+            }
+        }
+
+        [Pure, NotNull]
+        internal static byte[] WriteASCII([NotNull] string text)
+        {
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            {
+                if (string.IsNullOrEmpty(text)) //Write a null string
+                {
+                    writer.Write((byte) 0);
+                    return buffer.ToArray();
+                }
+
+                writer.Write(CodePagesEncodingProvider.Instance.GetEncoding(1252).GetBytes(text));
+                writer.Write((byte) 0); //EOL
+                return buffer.ToArray();
+            }
+        }
+
+        [NotNull]
+        static string ReadUTF16([NotNull] byte[] frame, ref int index)
         {
             // check for empty string first, and throw a useful exception
             // otherwise we'll get an out-of-range exception when we look for the BOM
@@ -122,79 +158,83 @@ namespace Id3Lib
                 index += 2;
                 return ReadUTF16BE(frame, ref index);
             }
+
             if (frame[index] == 0xff && frame[index + 1] == 0xfe) // Little Endian
             {
                 index += 2;
                 return ReadUTF16LE(frame, ref index);
             }
+
             if (frame[index] == 0x00 && frame[index + 1] == 0x00) // empty string
             {
                 index += 2;
-                return "";
+                return string.Empty;
             }
 
             throw new InvalidFrameException("Invalid UTF16 string.");
-
         }
 
-        public static string ReadUTF16BE(byte[] frame, ref int index)
+        [NotNull]
+        static string ReadUTF16BE([NotNull] byte[] frame, ref int index)
         {
-            UnicodeEncoding encoding = new UnicodeEncoding(true, false);
-            int count = Memory.FindShort(frame, 0, index);
+            var encoding = new UnicodeEncoding(true, false);
+            var count = Memory.FindShort(frame, 0, index);
             if (count == -1)
                 throw new InvalidFrameException("Invalid UTF16BE string size");
 
             // we can safely let count==0 fall through
-            string text = encoding.GetString(frame, index, count);
+            var text = encoding.GetString(frame, index, count);
             index += count; // add the bytes read
-            index += 2;     // skip the EOL
+            index += 2; // skip the EOL
             return text;
         }
 
-        private static string ReadUTF16LE(byte[] frame, ref int index)
+        [NotNull]
+        static string ReadUTF16LE([NotNull] byte[] frame, ref int index)
         {
-            UnicodeEncoding encoding = new UnicodeEncoding(false, false);
-            int count = Memory.FindShort(frame, 0, index);
+            var encoding = new UnicodeEncoding(false, false);
+            var count = Memory.FindShort(frame, 0, index);
             if (count == -1)
                 throw new InvalidFrameException("Invalid UTF16LE string size");
 
             // we can safely let count==0 fall through
-            string text = encoding.GetString(frame, index, count);
+            var text = encoding.GetString(frame, index, count);
             index += count; // add the bytes read
-            index += 2;     // skip the EOL
+            index += 2; // skip the EOL
             return text;
         }
 
-        public static string ReadUTF8(byte[] frame, ref int index)
+        [NotNull]
+        static string ReadUTF8([NotNull] byte[] frame, ref int index)
         {
-            string text = null;
-            int count = Memory.FindByte(frame, 0, index);
+            string text = string.Empty;
+            var count = Memory.FindByte(frame, 0, index);
             if (count == -1)
-            {
                 throw new InvalidFrameException("Invalid UTF8 string size");
-            }
             if (count > 0)
             {
                 text = Encoding.UTF8.GetString(frame, index, count);
                 index += count; // add the read bytes
             }
+
             index++; // jump an end of line byte
             return text;
         }
 
-        public static string ReadASCIIEnd(byte[] frame, int index)
+        [Pure, NotNull]
+        static string ReadASCIIEnd([NotNull] byte[] frame, int index)
         {
-            Encoding encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-            return encoding.GetString(frame, index, frame.Length - index);
+            return CodePagesEncodingProvider.Instance.GetEncoding(1252).GetString(frame, index, frame.Length - index);
         }
 
-        public static string ReadUTF16End(byte[] frame, int index)
+        [Pure, NotNull]
+        static string ReadUTF16End([NotNull] byte[] frame, int index)
         {
             // check for empty string first
             // otherwise we'll get an exception when we look for the BOM
             // SourceForge bug ID: 2686976
             if (index >= frame.Length - 2)
-                return "";
+                return string.Empty;
 
             if (frame[index] == 0xfe && frame[index + 1] == 0xff) // Big Endian
                 return ReadUTF16BEEnd(frame, index + 2);
@@ -205,208 +245,136 @@ namespace Id3Lib
             throw new InvalidFrameException("Invalid UTF16 string.");
         }
 
-        public static string ReadUTF16BEEnd(byte[] frame, int index)
+        [Pure, NotNull]
+        static string ReadUTF16BEEnd([NotNull] byte[] frame, int index)
         {
-            var encoding = new UnicodeEncoding(true, false);
-            return encoding.GetString(frame, index, frame.Length - index);
+            return new UnicodeEncoding(true, false).GetString(frame, index, frame.Length - index);
         }
 
-        private static string ReadUTF16LEEnd(byte[] frame, int index)
+        [Pure, NotNull]
+        static string ReadUTF16LEEnd([NotNull] byte[] frame, int index)
         {
-            var encoding = new UnicodeEncoding(false, false);
-            return encoding.GetString(frame, index, frame.Length - index);
+            return new UnicodeEncoding(false, false).GetString(frame, index, frame.Length - index);
         }
 
-        public static string ReadUTF8End(byte[] frame, int index)
+        [Pure, NotNull]
+        static string ReadUTF8End([NotNull] byte[] frame, int index)
         {
             return Encoding.UTF8.GetString(frame, index, frame.Length - index);
         }
 
-        // Write routines
-        public static byte[] WriteText(string text, TextCode code)
-        {
-            switch (code)
-            {
-                case TextCode.Ascii:
-                    {
-                        return WriteASCII(text);
-                    }
-                case TextCode.Utf16:
-                    {
-                        return WriteUTF16(text);
-                    }
-                case TextCode.Utf16BE:
-                    {
-                        return WriteUTF16BE(text);
-                    }
-                case TextCode.Utf8:
-                    {
-                        return WriteUTF8(text);
-                    }
-                default:
-                    {
-                        throw new InvalidFrameException("Invalid text code string type.");
-                    }
-            }
-        }
-
-        public static byte[] WriteTextEnd(string text, TextCode code)
-        {
-            switch (code)
-            {
-                case TextCode.Ascii:
-                    {
-                        return WriteASCIIEnd(text);
-                    }
-                case TextCode.Utf16:
-                    {
-                        return WriteUTF16End(text);
-                    }
-                case TextCode.Utf16BE:
-                    {
-                        return WriteUTF16BEEnd(text);
-                    }
-                case TextCode.Utf8:
-                    {
-                        return WriteUTF8End(text);
-                    }
-                default:
-                    {
-                        throw new InvalidFrameException("Invalid text code string type.");
-                    }
-            }
-        }
-
-        public static byte[] WriteASCII(string text)
+        [Pure, NotNull]
+        static byte[] WriteUTF16([NotNull] string text)
         {
             using (var buffer = new MemoryStream())
             using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                if (String.IsNullOrEmpty(text)) //Write a null string
-                {
-                    writer.Write((byte) 0);
-                    return buffer.ToArray();
-                }
-                var encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-                writer.Write(encoding.GetBytes(text));
-                writer.Write((byte) 0); //EOL
-                return buffer.ToArray();
-            }
-        }
-
-        public static byte[] WriteUTF16(string text)
-        {
-            using (var buffer = new MemoryStream())
-            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
-            {
-                if (String.IsNullOrEmpty(text)) //Write a null string
+                if (string.IsNullOrEmpty(text)) //Write a null string
                 {
                     writer.Write((ushort) 0);
                     return buffer.ToArray();
                 }
+
                 writer.Write((byte) 0xff); //Little endian, we have UTF16BE for big endian
                 writer.Write((byte) 0xfe);
-                var encoding = new UnicodeEncoding(false, false);
-                writer.Write(encoding.GetBytes(text));
+                writer.Write(new UnicodeEncoding(false, false).GetBytes(text));
                 writer.Write((ushort) 0);
                 return buffer.ToArray();
             }
         }
 
-        public static byte[] WriteUTF16BE(string text)
+        [Pure, NotNull]
+        static byte[] WriteUTF16BE([NotNull] string text)
         {
             using (var buffer = new MemoryStream())
             using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                var encoding = new UnicodeEncoding(true, false);
-                if (String.IsNullOrEmpty(text)) //Write a null string
+                if (string.IsNullOrEmpty(text)) //Write a null string
                 {
                     writer.Write((ushort) 0);
                     return buffer.ToArray();
                 }
-                writer.Write(encoding.GetBytes(text));
+
+                writer.Write(new UnicodeEncoding(true, false).GetBytes(text));
                 writer.Write((ushort) 0);
                 return buffer.ToArray();
             }
         }
 
-        public static byte[] WriteUTF8(string text)
+        [Pure, NotNull]
+        static byte[] WriteUTF8([NotNull] string text)
         {
             using (var buffer = new MemoryStream())
             using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                if (String.IsNullOrEmpty(text)) //Write a null string
+                if (string.IsNullOrEmpty(text)) //Write a null string
                 {
                     writer.Write((byte) 0);
                     return buffer.ToArray();
                 }
+
                 writer.Write(Encoding.UTF8.GetBytes(text));
                 writer.Write((byte) 0);
                 return buffer.ToArray();
             }
         }
 
-        public static byte[] WriteASCIIEnd(string text)
+        [Pure, NotNull]
+        static byte[] WriteASCIIEnd([NotNull] string text)
         {
             using (var buffer = new MemoryStream())
             using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                if (String.IsNullOrEmpty(text))
-                {
+                if (string.IsNullOrEmpty(text))
                     return buffer.ToArray();
-                }
-                Encoding encoding = CodePagesEncodingProvider.Instance.GetEncoding(1252); // Should be ASCII
-                writer.Write(encoding.GetBytes(text));
+
+                writer.Write(CodePagesEncodingProvider.Instance.GetEncoding(1252).GetBytes(text));
                 return buffer.ToArray();
             }
         }
 
-        public static byte[] WriteUTF16End(string text)
+        [Pure, NotNull]
+        static byte[] WriteUTF16End([NotNull] string text)
         {
-            using (MemoryStream buffer = new MemoryStream(text.Length + 2))
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream(text.Length + 2))
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                if (String.IsNullOrEmpty(text)) //Write a null string
-                {
+                if (string.IsNullOrEmpty(text)) //Write a null string
                     return buffer.ToArray();
-                }
-                UnicodeEncoding encoding;
                 writer.Write((byte) 0xff); // Little endian
                 writer.Write((byte) 0xfe);
-                encoding = new UnicodeEncoding(false, false);
-                writer.Write(encoding.GetBytes(text));
+                writer.Write(new UnicodeEncoding(false, false).GetBytes(text));
                 return buffer.ToArray();
             }
         }
 
-        public static byte[] WriteUTF16BEEnd(string text)
+        [Pure, NotNull]
+        static byte[] WriteUTF16BEEnd([NotNull] string text)
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                if (String.IsNullOrEmpty(text)) //Write a null string
-                {
+                if (string.IsNullOrEmpty(text)) //Write a null string
                     return buffer.ToArray();
-                }
-                UnicodeEncoding encoding = new UnicodeEncoding(true, false);
-                writer.Write(encoding.GetBytes(text));
+                writer.Write(new UnicodeEncoding(true, false).GetBytes(text));
                 return buffer.ToArray();
             }
         }
 
-        public static byte[] WriteUTF8End(string text)
+        [Pure, NotNull]
+        static byte[] WriteUTF8End([NotNull] string text)
         {
-            using (MemoryStream buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var buffer = new MemoryStream())
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
-                if (String.IsNullOrEmpty(text)) //Write a null string
+                if (string.IsNullOrEmpty(text)) //Write a null string
                 {
                     return buffer.ToArray();
                 }
+
                 writer.Write(Encoding.UTF8.GetBytes(text));
                 return buffer.ToArray();
             }
         }
-        #endregion
     }
 }

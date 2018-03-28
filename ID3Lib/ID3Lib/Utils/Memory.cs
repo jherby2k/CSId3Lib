@@ -1,41 +1,26 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
 
 using System;
+using System.Buffers.Binary;
+using JetBrains.Annotations;
 
 namespace Id3Lib
 {
     /// <summary>
     /// Provides static methods to compare, find, copy and clear a byte array.
     /// </summary>
-    internal static class Memory
+    static class Memory
     {
-        #region Methods
-
         /// <summary>
         /// Compare two byte arrays and determine if they are equal
         /// </summary>
         /// <param name="b1">First byte array</param>
         /// <param name="b2">Second byte array</param>
         /// <returns>Returns true if the arrays are equal</returns>
-        public static bool Compare(byte[] b1, byte[] b2)
+        [Pure]
+        internal static bool Compare(ReadOnlySpan<byte> b1, ReadOnlySpan<byte> b2)
         {
-            if (b1 == null)
-                throw new ArgumentNullException("b1");
-            if (b2 == null)
-                throw new ArgumentNullException("b2");
-
-            if (b1.Length != b2.Length)
-            {
-                return false;
-            }
-            for (int n = 0; n < b1.Length; n++)
-            {
-                if (b1[n] != b2[n])
-                {
-                    return false;
-                }
-            }
-            return true;
+            return b1.SequenceCompareTo(b2) == 0;
         }
 
         /// <summary>
@@ -45,7 +30,8 @@ namespace Id3Lib
         /// <param name="srcIndex">Offset of the source array</param>
         /// <returns>Destination array</returns>
         /// <param name="count">Number of bytes to extract</param>
-        public static byte[] Extract(byte[] src, int srcIndex, int count)
+        [Pure, NotNull]
+        internal static byte[] Extract(ReadOnlySpan<byte> src, int srcIndex, int count)
         {
             if (src == null)
                 throw new ArgumentNullException("src");
@@ -56,9 +42,7 @@ namespace Id3Lib
             if (src.Length - srcIndex < count)
                 throw new InvalidOperationException();
 
-            byte[] dst = new byte[count];
-            Array.Copy(src, srcIndex, dst, 0, count);
-            return dst;
+            return src.Slice(srcIndex, count).ToArray();
         }
 
         /// <summary>
@@ -68,21 +52,13 @@ namespace Id3Lib
         /// <param name="val">Byte value to find</param>
         /// <param name="index">Offset of the source array</param>
         /// <returns></returns>
-        public static int FindByte(byte[] src, byte val, int index)
+        [Pure]
+        internal static int FindByte(ReadOnlySpan<byte> src, byte val, int index)
         {
-            int size = src.Length;
-
-            if (index > size)
+            if (index > src.Length)
                 throw new InvalidOperationException();
 
-            for (int n = index; n < size; n++)
-            {
-                if (src[n] == val)
-                {
-                    return n - index;
-                }
-            }
-            return -1;
+            return src.Slice(index).IndexOf(val);
         }
 
         /// <summary>
@@ -92,7 +68,8 @@ namespace Id3Lib
         /// <param name="val">Short value to find</param>
         /// <param name="index">Offset of the source array</param>
         /// <returns></returns>
-        public static int FindShort(byte[] src, short val, int index)
+        [Pure]
+        internal static int FindShort(ReadOnlySpan<byte> src, short val, int index)
         {
             if (src == null)
                 throw new ArgumentNullException("src");
@@ -101,13 +78,9 @@ namespace Id3Lib
             if (index > size)
                 throw new InvalidOperationException();
 
-            for (int n = index; n < size; n += 2)
-            {
-                if (BitConverter.ToInt16(src, n) == val)
-                {
+            for (var n = index; n < size; n += 2)
+                if (BinaryPrimitives.ReadInt16LittleEndian(src.Slice(n)) == val)
                     return n - index;
-                }
-            }
             return -1;
         }
 
@@ -117,14 +90,14 @@ namespace Id3Lib
         /// <param name="dst">Source array</param>
         /// <param name="begin">Start position; first byte to clear</param>
         /// <param name="end">End position; first byte not to clear</param>
-        public static void Clear(byte[] dst, int begin, int end)
+        internal static void Clear(Span<byte> dst, int begin, int end)
         {
             if (dst == null)
                 throw new ArgumentNullException("dst");
             if (begin > end || begin > dst.Length || end > dst.Length)
                 throw new InvalidOperationException();
 
-            Array.Clear(dst, begin, end - begin);
+            dst.Slice(begin, end - begin).Clear();
         }
 
         /// <summary>
@@ -132,7 +105,8 @@ namespace Id3Lib
         /// </summary>
         /// <param name="value">a byte array from 1 to 8 bytes</param>
         /// <returns>unsigned long</returns>
-        public static ulong ToInt64(byte[] value)
+        [Pure]
+        internal static ulong ToInt64(ReadOnlySpan<byte> value)
         {
             if (value == null)
                 throw new ArgumentNullException("value");
@@ -140,7 +114,7 @@ namespace Id3Lib
             if (value.Length > 8)
                 throw new InvalidOperationException("The count is to large to be stored");
 
-            return BitConverter.ToUInt64(value, 0);
+            return BinaryPrimitives.ReadUInt64LittleEndian(value);
         }
 
         /// <summary>
@@ -148,11 +122,10 @@ namespace Id3Lib
         /// </summary>
         /// <param name="value">unsigned long to convert to an array</param>
         /// <returns>the used bytes form the unsigned long</returns>
-        public static byte[] GetBytes(ulong value)
+        [Pure, NotNull]
+        internal static byte[] GetBytes(ulong value)
         {
             return BitConverter.GetBytes(value);
         }
-
-        #endregion
     }
 }

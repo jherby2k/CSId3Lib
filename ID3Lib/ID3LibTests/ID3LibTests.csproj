@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <AssemblyName>ID3Lib.Tests</AssemblyName>
     <RootNamespace>ID3Lib.Tests</RootNamespace>

@@ -17,8 +17,8 @@ namespace Id3Lib
     [PublicAPI]
     public class TagHeader
     {
-        static readonly byte[] _id3 = { 0x49, 0x44, 0x33 }; //"ID3" tag
-        static readonly byte[] _3di = { 0x33, 0x44, 0x49 }; //"3DI" footer tag
+        [NotNull] static readonly byte[] _id3 = { 0x49, 0x44, 0x33 }; //"ID3" tag
+        [NotNull] static readonly byte[] _3di = { 0x33, 0x44, 0x49 }; //"3DI" footer tag
 
         byte _id3Flags;
         uint _paddingSize;
