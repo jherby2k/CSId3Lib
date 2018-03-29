@@ -48,7 +48,6 @@ namespace Id3Lib.Frames
         {
             var index = 0;
             TextCode = (TextCode) frame[index++];
-            index++;
             Text = TextBuilder.ReadTextEnd(frame, index, TextCode);
         }
 
