@@ -1,7 +1,6 @@
 ﻿using Id3Lib.Frames;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-
 namespace Id3Lib.Tests
 {
     [TestClass]
@@ -10,20 +9,17 @@ namespace Id3Lib.Tests
         [TestMethod]
         public void TagCompression()
         {
-            TagModel frameModel = new TagModel();
+            var frameHelper = new FrameHelper(new TagModel().Header);
 
-            FrameHelper frameHelper = new FrameHelper(frameModel.Header);
-
-            FrameText originalFrame = (FrameText)FrameFactory.Build("TALB");
+            var originalFrame = (FrameText) FrameFactory.Build("TALB");
             originalFrame.Text = "Hello World!!!";
             originalFrame.Compression = true;
 
-            ushort flags;
-            byte[] body = frameHelper.Make(originalFrame, out flags);
+            var body = frameHelper.Make(originalFrame, out var flags);
 
-            FrameText resultFrame = (FrameText)frameHelper.Build("TALB", flags, body);
-
-            Assert.AreEqual(resultFrame.Text, originalFrame.Text);
+            Assert.AreEqual(
+                ((FrameText) frameHelper.Build("TALB", flags, body)).Text,
+                originalFrame.Text);
         }
 
     }

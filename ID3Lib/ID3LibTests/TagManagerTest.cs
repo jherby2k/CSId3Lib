@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
+﻿using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Id3Lib.Tests
 {
@@ -25,13 +25,11 @@ namespace Id3Lib.Tests
             TagManager.Deserialize(Resources.GetResource("230-Picture.tag"));
         }
 
-
         [TestMethod]
         public void Read230Syncedlyrics()
         {
             TagManager.Deserialize(Resources.GetResource("230-SyncedLyrics.tag"));
         }
-
 
         [TestMethod]
         public void Read230Unicode()
@@ -39,13 +37,10 @@ namespace Id3Lib.Tests
             TagManager.Deserialize(Resources.GetResource("230-Unicode.tag"));
         }
 
-
         [TestMethod]
         public void Read230BarkMoon()
         {
             TagManager.Deserialize(Resources.GetResource("230-BarkMoon.tag"));
         }
-
-       
     }
 }

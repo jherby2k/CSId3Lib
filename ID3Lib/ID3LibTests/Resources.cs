@@ -1,22 +1,22 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace Id3Lib.Tests
 {
-    public static class Resources
+    static class Resources
     {
-        public static Stream GetResource(string resource)
+        internal static Stream GetResource([NotNull] string resource)
         {
             if (resource == null)
-                throw new ArgumentNullException("resource");
+                throw new ArgumentNullException(nameof(resource));
 
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("ID3Lib.Tests.Resources." + resource);
+            var stream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream($"ID3Lib.Tests.Resources.{resource}");
 
             if (stream == null)
                 throw new ArgumentException("resource not found");
-
-           
 
             return stream;
         }
