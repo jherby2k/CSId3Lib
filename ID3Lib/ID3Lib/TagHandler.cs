@@ -3,6 +3,7 @@ using System;
 using Id3Lib.Frames;
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Id3Lib
 {
@@ -169,7 +170,7 @@ namespace Id3Lib
         }
 
         /// <summary>
-        /// Get/Set the associated picture as System.Drawing.Image, or null reference
+        /// Get/Set the associated picture, or null reference
         /// </summary>
         [CanBeNull]
         public Image<Rgba32> Picture

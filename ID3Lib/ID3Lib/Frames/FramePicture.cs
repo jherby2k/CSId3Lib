@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using JetBrains.Annotations;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace Id3Lib.Frames
 {
