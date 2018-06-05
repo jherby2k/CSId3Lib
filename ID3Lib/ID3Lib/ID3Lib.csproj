@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <Version>0.7.6-beta</Version>
+    <Version>0.7.7-beta</Version>
     <Description>A managed library for reading and writing ID3 tags (versions 1, 2.3 and 2.4). This a fork of Hugo Rumayor's project located at https://sourceforge.net/projects/csid3lib, migrated to .NET Standard 2.0.</Description>
     <Product>ID3Lib</Product>
     <PackageId>ID3Lib</PackageId>
@@ -13,8 +13,6 @@
     <Company />
     <PackageLicenseUrl>https://opensource.org/licenses/BSD-3-Clause</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/jherby2k/CSId3Lib</PackageProjectUrl>
-    <AssemblyVersion>0.7.6.0</AssemblyVersion>
-    <FileVersion>0.7.6.0</FileVersion>
     <AssemblyName>ID3Lib</AssemblyName>
   </PropertyGroup>
 
