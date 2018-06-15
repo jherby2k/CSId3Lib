@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>latest</LangVersion>
-    <Version>0.7.7-beta</Version>
+    <Version>0.7.8-beta</Version>
     <Description>A managed library for reading and writing ID3 tags (versions 1, 2.3 and 2.4). This a fork of Hugo Rumayor's project located at https://sourceforge.net/projects/csid3lib, migrated to .NET Standard 2.0.</Description>
     <Product>ID3Lib</Product>
     <PackageId>ID3Lib</PackageId>
@@ -18,11 +18,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations" Version="11.1.0" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="1.0.7" />
     <PackageReference Include="SixLabors.ImageSharp" Version="1.0.0-beta0004" />
     <PackageReference Include="System.Memory" Version="4.5.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
   </ItemGroup>
 
 </Project>
