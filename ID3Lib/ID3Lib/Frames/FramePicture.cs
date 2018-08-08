@@ -1,11 +1,8 @@
 // Copyright(C) 2002-2012 Hugo Rumayor Montemayor, All rights reserved.
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using JetBrains.Annotations;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Id3Lib.Frames
 {
@@ -135,23 +132,6 @@ namespace Id3Lib.Frames
         /// </summary>
         [NotNull]
         public byte[] PictureData { get; set; }
-
-        /// <summary>
-        /// Image of the picture
-        /// </summary>
-        [NotNull]
-        public Image<Rgba32> Picture
-        {
-            get => Image.Load(new MemoryStream(PictureData, false));
-            set
-            {
-                if(value == null)
-                    throw new ArgumentNullException("value");
-
-                PictureData = value.SavePixelData();
-                Mime = Image.DetectFormat(PictureData).DefaultMimeType;
-            }
-        }
 
         /// <summary>
         /// Picture Frame

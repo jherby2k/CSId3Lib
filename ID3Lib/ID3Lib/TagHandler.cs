@@ -2,8 +2,6 @@
 using System;
 using Id3Lib.Frames;
 using JetBrains.Annotations;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace Id3Lib
 {
@@ -167,39 +165,6 @@ namespace Id3Lib
         {
             get => GetFullTextFrame("COMM");
             set => SetFullTextFrame("COMM", value);
-        }
-
-        /// <summary>
-        /// Get/Set the associated picture, or null reference
-        /// </summary>
-        [CanBeNull]
-        public Image<Rgba32> Picture
-        {
-            get
-            {
-                var frame = FindFrame("APIC") as FramePicture;
-                return frame?.Picture;
-            }
-            set
-            {
-                if (FindFrame("APIC") is FramePicture frame)
-                {
-                    if (value != null)
-                        frame.Picture = value;
-                    else
-                        FrameModel.Remove(frame);
-                }
-                else
-                {
-                    if (value == null) return;
-
-                    if (FrameFactory.Build("APIC") is FramePicture framePic)
-                    {
-                        framePic.Picture = value;
-                        FrameModel.Add(framePic);
-                    }
-                }
-            }
         }
 
         /// <summary>
