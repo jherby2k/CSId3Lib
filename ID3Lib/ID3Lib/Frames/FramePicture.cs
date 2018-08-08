@@ -162,7 +162,7 @@ namespace Id3Lib.Frames
         public override byte[] Make()
         {
             using (var buffer = new MemoryStream())
-            using (BinaryWriter writer = new BinaryWriter(buffer, Encoding.UTF8, true))
+            using (var writer = new BinaryWriter(buffer, Encoding.UTF8, true))
             {
                 writer.Write((byte) TextEncoding);
                 writer.Write(TextBuilder.WriteASCII(Mime));
@@ -177,7 +177,6 @@ namespace Id3Lib.Frames
         /// Get a description of the picture frame
         /// </summary>
         /// <returns>Picture description</returns>
-        [NotNull]
         public override string ToString()
         {
             return Description;
