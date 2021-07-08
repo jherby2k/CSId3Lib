@@ -6,4 +6,4 @@ This code is a fork of [Hugo Rumayor's project located at SourceForge](https://s
 
 The primary goal of this fork was to migrate to .NET Standard 2.0, then release via NuGet. Subsequent updates focus on bug fixes, code cleanup, modern C# syntax, and performance improvements.
 
-This library has unresolved bugs and may not create valid tags when using more advanced settings. You're welcome to fork and fix them!
+**This library has unresolved bugs and may not create valid tags when using more advanced settings. You're welcome to fork and fix them!**
